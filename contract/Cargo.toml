@@ -1,0 +1,24 @@
+[package]
+name = "contract"
+version = "0.1.0"
+authors = ["Maciej Zielinski <maciek.s.zielinski@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+casperlabs-contract = "0.6.1"
+casperlabs-types = "0.6.1"
+
+[[bin]]
+name = "contract"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
+
+[features]
+default = ["casperlabs-contract/std", "casperlabs-types/std", "casperlabs-contract/test-support"]
+
+[profile.release]
+lto = true

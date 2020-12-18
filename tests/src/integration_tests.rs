@@ -6,6 +6,7 @@ mod tests {
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
 
     const METHOD_DEPOSIT: &str = "deposit";
+    const METHOD_DEPOSIT2: &str = "deposit_v2";
     const METHOD_UPGRADE: &str = "upgrade";
 
     const INCOMMING_PURSE: &str = "incomming_purse";
@@ -31,14 +32,30 @@ mod tests {
             .build();
         
         context.run(session);
+	println!("running context");
         assert_eq!(get_contract_version_v1(&context), 1);
 
         call_deposit_v1(&mut context);
         assert_eq!(get_text(&context), TEXT_VALUE_V1);
-
+	println!("calling upgrade");
         call_upgrade_v1(&mut context);
+	println!("call upgrade ok");
+        assert_eq!(get_contract_version_v2(&context), 2);
+        call_deposit_v2(&mut context);
+	println!("checking version 2");
+        assert_eq!(get_text(&context), TEXT_VALUE_V2);
+    }
 
-        // assert_eq!(get_contract_version_v2(&context), 2);
+
+    fn call_deposit_v2(context: &mut TestContext) {
+        let contract_hash = get_contract_hash(&context);
+        let code = Code::Hash(contract_hash, METHOD_DEPOSIT2.to_string());
+        let args = runtime_args!{};
+        let session = SessionBuilder::new(code, args)
+            .with_address(MY_ACCOUNT)
+            .with_authorization_keys(&[MY_ACCOUNT])
+            .build();
+        context.run(session);
     }
 
     fn call_deposit_v1(context: &mut TestContext) {

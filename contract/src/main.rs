@@ -10,13 +10,13 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType, CLTyped, Key,
+use casperlabs_types::{CLType, CLTyped, Key, ContractPackageHash,
     bytesrepr::{FromBytes, ToBytes},
     contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
 };
 
 const METHOD_DEPOSIT: &str = "deposit";
-const METHOD_DEPOSIT_V2: &str = "deposit_v2";
+pub const METHOD_DEPOSIT_V2: &str = "deposit_v2";
 const METHOD_UPGRADE: &str = "upgrade";
 const INCOMMING_PURSE: &str = "incomming_purse";
 const CONTRACT_PACKAGE: &str = "contract_package";
@@ -29,6 +29,21 @@ const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V1: &str = "value_one";
 const TEXT_VALUE_V2: &str = "value_two";
 
+/*
+fn install_version_1(contract_package_hash: ContractPackageHash, restricted_uref: URef) {
+    let contract_named_keys = {
+        let contract_variable = storage::new_uref(0);
+
+        let mut named_keys = NamedKeys::new();
+        named_keys.insert("contract_named_key".to_string(), contract_variable.into());
+        named_keys.insert("restricted_uref".to_string(), restricted_uref.into());
+        named_keys
+    };
+
+    let entry_points = create_entry_points_1();
+    storage::add_contract_version(contract_package_hash, entry_points, contract_named_keys);
+}
+*/
 
 #[no_mangle]
 pub extern "C" fn deposit() {
@@ -80,6 +95,14 @@ pub extern "C" fn call() {
             EntryPointType::Contract,
         );
         entry_points.add_entry_point(deposit);
+        let depositv2 = EntryPoint::new(
+            METHOD_DEPOSIT_V2,
+            vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
+            CLType::Unit,
+            EntryPointAccess::Public,
+            EntryPointType::Contract,
+        );
+        entry_points.add_entry_point(depositv2);
 
         let upgrade = EntryPoint::new(
             METHOD_UPGRADE,

@@ -17,7 +17,7 @@ use casperlabs_types::{CLType, CLTyped, Key, CLValue,
 
 const METHOD_GET_TEXT: &str = "get_text";
 const METHOD_DEPOSIT_V2: &str = "deposit_v2";
-const METHOD_UPGRADE: &str = "upgrade_to";
+const METHOD_INSTALL: &str = "install";
 const INCOMMING_PURSE: &str = "incomming_purse";
 const CONTRACT_PACKAGE: &str = "contract_package";
 const ACCESS_TOKEN: &str = "access_token";
@@ -32,34 +32,28 @@ const TEXT_VALUE_V2: &str = "value_two";
 
 #[no_mangle]
 pub extern "C" fn get_text() {
-    set_key(TEXT_KEY, TEXT_VALUE_V1)
+    runtime::ret(CLValue::from_t("I'm v1").unwrap());
 }
 
-
-
 #[no_mangle]
-pub extern "C" fn upgrade_to() {
-    // // let entry_points = {
-    // //     let mut entry_points = EntryPoints::new();
-    // //     let deposit = EntryPoint::new(
-    // //         METHOD_DEPOSIT_V2,
-    // //         vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
-    // //         CLType::Unit,
-    // //         EntryPointAccess::Public,
-    // //         EntryPointType::Contract,
-    // //     );
-    // //     entry_points.add_entry_point(deposit);
-    // //     entry_points
-    // // };
+pub extern "C" fn install() {
+    // 1. Create endpoints.
+    let entry_points = {
+        let mut entry_points = EntryPoints::new();
+        let deposit = EntryPoint::new(
+            METHOD_GET_TEXT,
+            vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
+            CLType::Unit,
+            EntryPointAccess::Public,
+            EntryPointType::Contract,
+        );
+        entry_points.add_entry_point(deposit);
+        entry_points
+    };
 
-    // let contract_package = runtime::get_key(CONTRACT_PACKAGE).unwrap().into_hash().unwrap();
-
-    // let (new_contract_hash, new_contract_version) =
-    //     storage::add_contract_version(contract_package, entry_points, NamedKeys::new());
+    // 2. Use package_hash from args to install v2.
     
-    // runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
-    // set_key(CONTRACT_HASH, new_contract_hash);
-    // set_key(CONTRACT_VERSION, new_contract_version);
+
 }
 
 
@@ -73,13 +67,13 @@ pub extern "C" fn call() {
             METHOD_GET_TEXT,
             vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
             CLType::Unit,
-            EntryPointAccess::Public,
+            EntryPointAccess::Groups(vec![]),
             EntryPointType::Contract,
         );
         entry_points.add_entry_point(deposit);
 
         let upgrade = EntryPoint::new(
-            METHOD_UPGRADE,
+            METHOD_INSTALL,
             vec![],
             CLType::Unit,
             EntryPointAccess::Public,

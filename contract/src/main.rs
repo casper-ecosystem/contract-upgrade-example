@@ -39,6 +39,16 @@ pub extern "C" fn get_text() {
 
 #[no_mangle]
 pub extern "C" fn upgrade_to() {
+    let installer_hash = runtime::get_named_arg("installer_hash");
+    runtime::call_contract(
+        installer_hash, 
+        "install", 
+        runtime_args!{
+            "package_hash" => get_key(CONTRACT_PACKAGE),
+            "access_token" => get_key(ACCESS_TOKEN)
+        }
+    );
+
     // // let entry_points = {
     // //     let mut entry_points = EntryPoints::new();
     // //     let deposit = EntryPoint::new(

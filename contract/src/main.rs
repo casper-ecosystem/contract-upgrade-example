@@ -10,7 +10,7 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType, CLTyped, Key, ContractPackageHash,
+use casperlabs_types::{CLType, CLTyped, 
     bytesrepr::{FromBytes, ToBytes},
     contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
 };
@@ -29,21 +29,6 @@ const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V1: &str = "value_one";
 const TEXT_VALUE_V2: &str = "value_two";
 
-/*
-fn install_version_1(contract_package_hash: ContractPackageHash, restricted_uref: URef) {
-    let contract_named_keys = {
-        let contract_variable = storage::new_uref(0);
-
-        let mut named_keys = NamedKeys::new();
-        named_keys.insert("contract_named_key".to_string(), contract_variable.into());
-        named_keys.insert("restricted_uref".to_string(), restricted_uref.into());
-        named_keys
-    };
-
-    let entry_points = create_entry_points_1();
-    storage::add_contract_version(contract_package_hash, entry_points, contract_named_keys);
-}
-*/
 
 #[no_mangle]
 pub extern "C" fn deposit() {
@@ -128,6 +113,7 @@ pub extern "C" fn call() {
     set_key(CONTRACT_VERSION, new_contract_version);
 }
 
+/*
 fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {
     match runtime::get_key(name) {
         None => Default::default(),
@@ -137,6 +123,7 @@ fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {
         }
     }
 }
+*/
 
 fn set_key<T: ToBytes + CLTyped>(name: &str, value: T) {
     match runtime::get_key(name) {

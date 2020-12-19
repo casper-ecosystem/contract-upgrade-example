@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use casperlabs_engine_test_support::{Code, Error, SessionBuilder, TestContextBuilder, Value, TestContext, Hash};
-    use casperlabs_types::{account::AccountHash, U512, RuntimeArgs, runtime_args, CLTyped, contracts::{ContractVersion, EntryPoints, NamedKeys, Contract}, bytesrepr::FromBytes};
+    use casperlabs_engine_test_support::{Code, SessionBuilder, TestContextBuilder, TestContext, Hash};
+    use casperlabs_types::{account::AccountHash, U512, RuntimeArgs, runtime_args, CLTyped,  bytesrepr::FromBytes};
 
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
 
@@ -9,8 +9,6 @@ mod tests {
     const METHOD_DEPOSIT2: &str = "deposit_v2";
     const METHOD_UPGRADE: &str = "upgrade";
 
-    const INCOMMING_PURSE: &str = "incomming_purse";
-    const ACCESS_TOKEN: &str = "access_token";
     const CONTRACT_NAME: &str = "deposit_box";
     const CONTRACT_HASH: &str = "deposit_box_hash";
     const CONTRACT_VERSION: &str = "contract_version";
@@ -34,7 +32,6 @@ mod tests {
         context.run(session);
 	println!("running context");
         assert_eq!(get_contract_version_v1(&context), 1);
-
         call_deposit_v1(&mut context);
         assert_eq!(get_text(&context), TEXT_VALUE_V1);
 	println!("calling upgrade");

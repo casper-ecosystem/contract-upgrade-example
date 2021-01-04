@@ -10,7 +10,7 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType, CLTyped, Key, CLValue,
+use casperlabs_types::{CLType,runtime_args, U512, RuntimeArgs, CLTyped, Key, CLValue,
     bytesrepr::{FromBytes, ToBytes},
     contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
 };
@@ -39,13 +39,13 @@ pub extern "C" fn get_text() {
 
 #[no_mangle]
 pub extern "C" fn upgrade_to() {
-    let installer_hash = runtime::get_named_arg("installer_hash");
-    runtime::call_contract(
+    let installer_hash: [u8; 32] = runtime::get_named_arg("package_hash");
+    runtime::call_contract::<U512>(
         installer_hash, 
         "install", 
-        runtime_args!{
-            "package_hash" => get_key(CONTRACT_PACKAGE),
-            "access_token" => get_key(ACCESS_TOKEN)
+        runtime_args! {
+            "package_hash" => runtime::get_key(CONTRACT_PACKAGE),
+            "access_token" => runtime::get_key(ACCESS_TOKEN)
         }
     );
 

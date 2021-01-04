@@ -10,7 +10,7 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType, CLTyped, Key, CLValue,
+use casperlabs_types::{CLType, URef, CLTyped, Key, CLValue, ContractPackageHash,
     bytesrepr::{FromBytes, ToBytes},
     contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
 };
@@ -32,28 +32,38 @@ const TEXT_VALUE_V2: &str = "value_two";
 
 #[no_mangle]
 pub extern "C" fn get_text() {
-    runtime::ret(CLValue::from_t("I'm v1").unwrap());
+    runtime::ret(CLValue::from_t("I'm v2").unwrap());
 }
 
 #[no_mangle]
 pub extern "C" fn install() {
+	println!("install");
     // 1. Create endpoints.
     let entry_points = {
         let mut entry_points = EntryPoints::new();
-        let deposit = EntryPoint::new(
+        let gettext = EntryPoint::new(
             METHOD_GET_TEXT,
             vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
             CLType::Unit,
             EntryPointAccess::Public,
             EntryPointType::Contract,
         );
-        entry_points.add_entry_point(deposit);
+        entry_points.add_entry_point(gettext);
         entry_points
     };
-
-    // 2. Use package_hash from args to install v2.
-    
-
+	println!("ping"); 
+   // 2. Use package_hash from args to install v2.
+//	let access_token: CLValue = runtime::get_named_arg("access_token"); 
+	let contract_package: ContractPackageHash = runtime::get_named_arg("package_hash");
+    let mut named_keys = NamedKeys::new();
+//    named_keys.insert(access_token.to_string(), access_token.into());
+//    named_keys.insert(contract_package.as_string(), contract_package.into());
+    let (new_contract_hash, new_contract_version) =
+        storage::add_contract_version(contract_package.into(), entry_points, named_keys);
+ 
+    runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
+    set_key(CONTRACT_HASH, new_contract_hash);
+    set_key(CONTRACT_VERSION, new_contract_version);
 }
 
 

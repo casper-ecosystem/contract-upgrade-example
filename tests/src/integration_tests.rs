@@ -1,14 +1,14 @@
 #[cfg(test)]
 mod tests {
     use casperlabs_engine_test_support::{Code, Error, SessionBuilder, TestContextBuilder, Value, TestContext, Hash};
-    use casperlabs_types::{account::AccountHash, U512, RuntimeArgs, runtime_args, CLTyped, contracts::{ContractVersion, EntryPoints, NamedKeys, Contract}, bytesrepr::FromBytes};
+
+    use casperlabs_types::{account::AccountHash, ContractPackageHash, U512, URef, RuntimeArgs, runtime_args, CLTyped, contracts::{ContractVersion, EntryPoints, NamedKeys, Contract}, bytesrepr::FromBytes};
 
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
 
-    const METHOD_DEPOSIT: &str = "deposit";
-    const METHOD_UPGRADE: &str = "upgrade";
-
-    const INCOMMING_PURSE: &str = "incomming_purse";
+//    const METHOD_DEPOSIT: &str = "deposit";
+    const METHOD_UPGRADE: &str = "upgrade_to";
+///    const INCOMMING_PURSE: &str = "incomming_purse";
     const ACCESS_TOKEN: &str = "access_token";
     const CONTRACT_NAME: &str = "deposit_box";
     const CONTRACT_HASH: &str = "deposit_box_hash";
@@ -30,21 +30,50 @@ mod tests {
             .with_authorization_keys(&[MY_ACCOUNT])
             .build();
         
+	println!("context running");
         context.run(session);
+	println!("get contract version");
         assert_eq!(get_contract_version_v1(&context), 1);
 
-        call_deposit_v1(&mut context);
+
+        let mut context2 = TestContextBuilder::new()
+            .with_account(MY_ACCOUNT, U512::from(128_000_000))
+            .build();
+
+        let session_code2 = Code::from("installer.wasm");
+
+//	let package_hash: ContractPackageHash = get_contract_hash(&context);
+        let session_args2 = runtime_args! {
+//	"package_hash" => package_hash,
+//	"access_token" => ACCESS_TOKEN,
+};
+
+        let session2 = SessionBuilder::new(session_code2, session_args2)
+            .with_address(MY_ACCOUNT)
+            .with_authorization_keys(&[MY_ACCOUNT])
+            .build();
+        
+	println!("context2 running");
+        context2.run(session2);
+
+	println!("calling upgrade");
+//        call_upgrade_v1(&mut context2, ACCESS_TOKEN.to_string());
+
+        call_install(&mut context2, ACCESS_TOKEN.to_string());
+	println!("get text calling");
         assert_eq!(get_text(&context), TEXT_VALUE_V1);
-
-        call_upgrade_v1(&mut context);
-
         // assert_eq!(get_contract_version_v2(&context), 2);
     }
 
-    fn call_deposit_v1(context: &mut TestContext) {
-        let contract_hash = get_contract_hash(&context);
-        let code = Code::Hash(contract_hash, METHOD_DEPOSIT.to_string());
-        let args = runtime_args!{};
+
+
+	fn call_install(context: &mut TestContext, accesstoken: String) {
+	let contracthash: ContractPackageHash = get_contract_hash(&context).into();
+	let code = Code::Hash(contracthash, "install".to_string());
+	let args = runtime_args! {
+		"package_hash" => contracthash,
+		"access_token" => accesstoken,
+	};
         let session = SessionBuilder::new(code, args)
             .with_address(MY_ACCOUNT)
             .with_authorization_keys(&[MY_ACCOUNT])
@@ -52,10 +81,14 @@ mod tests {
         context.run(session);
     }
 
-    fn call_upgrade_v1(context: &mut TestContext) {
-        let contract_hash = get_contract_hash(&context);
-        let code = Code::Hash(contract_hash, METHOD_UPGRADE.to_string());
-        let args = runtime_args!{};
+
+	fn call_upgrade_v1(context: &mut TestContext, accesstoken: String) {
+	let contract_hash = get_contract_hash(&context);
+	let code = Code::Hash(contract_hash, METHOD_UPGRADE.to_string());
+	let args = runtime_args! {
+		"package_hash" => contract_hash,
+//		"access_token" => accesstoken,
+	};
         let session = SessionBuilder::new(code, args)
             .with_address(MY_ACCOUNT)
             .with_authorization_keys(&[MY_ACCOUNT])

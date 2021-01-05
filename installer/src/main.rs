@@ -69,6 +69,7 @@ pub extern "C" fn install() {
 
 #[no_mangle]
 pub extern "C" fn call() {
+	println!("okay");
     let (contract_package, access_token) = storage::create_contract_package_at_hash();
     
     let entry_points = {

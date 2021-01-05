@@ -54,7 +54,6 @@ mod tests {
 	println!("context2 running");
         context2.run(session2);
 
-        assert_eq!(get_contract_version_v1(&context2), 1);
 	println!("calling upgrade");
 //        call_upgrade_v1(&mut context2, ACCESS_TOKEN.to_string());
 
@@ -62,8 +61,9 @@ mod tests {
 	let contracthash: ContractPackageHash = get_contract_hash(&context).into();
         call_install(&mut context2, ACCESS_TOKEN.to_string(), contracthash);
 	println!("get text calling");
-        assert_eq!(get_text(&context), TEXT_VALUE_V1);
+        assert_eq!(get_text(&context), TEXT_VALUE_V2);
         // assert_eq!(get_contract_version_v2(&context), 2);
+	println!("Contract upgraded!");
     }
 
 

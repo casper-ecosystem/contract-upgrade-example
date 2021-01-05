@@ -2,13 +2,13 @@
 mod tests {
     use casperlabs_engine_test_support::{Code, Error, SessionBuilder, TestContextBuilder, Value, TestContext, Hash};
 
-    use casperlabs_types::{account::AccountHash, ContractPackageHash, U512, URef, RuntimeArgs, runtime_args, CLTyped, contracts::{ContractVersion, EntryPoints, NamedKeys, Contract}, bytesrepr::FromBytes};
+    use casperlabs_types::{account::AccountHash, ContractPackageHash, ContractHash, U512, URef, RuntimeArgs, runtime_args, CLTyped, contracts::{ContractVersion, EntryPoints, NamedKeys, Contract}, bytesrepr::FromBytes};
 
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
 
 //    const METHOD_DEPOSIT: &str = "deposit";
     const METHOD_UPGRADE: &str = "upgrade_to";
-///    const INCOMMING_PURSE: &str = "incomming_purse";
+    const INCOMMING_PURSE: &str = "incomming_purse";
     const ACCESS_TOKEN: &str = "access_token";
     const CONTRACT_NAME: &str = "deposit_box";
     const CONTRACT_HASH: &str = "deposit_box_hash";
@@ -19,8 +19,9 @@ mod tests {
 
     #[test]
     fn should_store_hello_world() {
+	let ac_fluff = U512::from(128_000_000); 
         let mut context = TestContextBuilder::new()
-            .with_account(MY_ACCOUNT, U512::from(128_000_000))
+            .with_account(MY_ACCOUNT, ac_fluff)
             .build();
 
         let session_code = Code::from("contract.wasm");
@@ -35,19 +36,16 @@ mod tests {
 	println!("get contract version");
         assert_eq!(get_contract_version_v1(&context), 1);
 
-
         let mut context2 = TestContextBuilder::new()
-            .with_account(MY_ACCOUNT, U512::from(128_000_000))
+            .with_account(MY_ACCOUNT, ac_fluff)
             .build();
 
         let session_code2 = Code::from("installer.wasm");
-
 //	let package_hash: ContractPackageHash = get_contract_hash(&context);
         let session_args2 = runtime_args! {
 //	"package_hash" => package_hash,
-//	"access_token" => ACCESS_TOKEN,
+	"access_token" => ACCESS_TOKEN,
 };
-
         let session2 = SessionBuilder::new(session_code2, session_args2)
             .with_address(MY_ACCOUNT)
             .with_authorization_keys(&[MY_ACCOUNT])
@@ -56,10 +54,13 @@ mod tests {
 	println!("context2 running");
         context2.run(session2);
 
+        assert_eq!(get_contract_version_v1(&context2), 1);
 	println!("calling upgrade");
 //        call_upgrade_v1(&mut context2, ACCESS_TOKEN.to_string());
 
-        call_install(&mut context2, ACCESS_TOKEN.to_string());
+
+	let contracthash: ContractPackageHash = get_contract_hash(&context).into();
+        call_install(&mut context2, ACCESS_TOKEN.to_string(), contracthash);
 	println!("get text calling");
         assert_eq!(get_text(&context), TEXT_VALUE_V1);
         // assert_eq!(get_contract_version_v2(&context), 2);
@@ -67,8 +68,8 @@ mod tests {
 
 
 
-	fn call_install(context: &mut TestContext, accesstoken: String) {
-	let contracthash: ContractPackageHash = get_contract_hash(&context).into();
+	fn call_install(context: &mut TestContext, accesstoken: String, contracthash: ContractHash) {
+
 	let code = Code::Hash(contracthash, "install".to_string());
 	let args = runtime_args! {
 		"package_hash" => contracthash,
@@ -104,8 +105,8 @@ mod tests {
         query_contract(context, CONTRACT_VERSION).unwrap()
     }
 
-    fn get_contract_hash(context: &TestContext) -> Hash {
-        query_account(context, CONTRACT_HASH).unwrap()
+    fn get_contract_hash(context: &TestContext) -> ContractHash {
+        query_account(context, "contract_package").unwrap()
     }
 
     fn get_text(context: &TestContext) -> String {

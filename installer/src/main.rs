@@ -10,7 +10,7 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType, URef, CLTyped, Key, CLValue, ContractPackageHash,
+use casperlabs_types::{CLType, URef, CLTyped, Key, CLValue, ContractPackageHash, ContractHash,
     bytesrepr::{FromBytes, ToBytes},
     contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
 };
@@ -23,7 +23,6 @@ const CONTRACT_PACKAGE: &str = "contract_package";
 const ACCESS_TOKEN: &str = "access_token";
 const CONTRACT_NAME: &str = "deposit_box";
 const CONTRACT_HASH: &str = "deposit_box_hash";
-
 const CONTRACT_VERSION: &str = "contract_version";
 const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V1: &str = "value_one";
@@ -53,11 +52,12 @@ pub extern "C" fn install() {
     };
 	println!("ping"); 
    // 2. Use package_hash from args to install v2.
-//	let access_token: CLValue = runtime::get_named_arg("access_token"); 
+	let access_token: Key = runtime::get_named_arg("access_token"); 
+	let at: String = format!("{}", access_token);
 	let contract_package: ContractPackageHash = runtime::get_named_arg("package_hash");
     let mut named_keys = NamedKeys::new();
-//    named_keys.insert(access_token.to_string(), access_token.into());
-//    named_keys.insert(contract_package.as_string(), contract_package.into());
+    named_keys.insert(at, access_token.into());
+    named_keys.insert(CONTRACT_PACKAGE.to_string(), contract_package.into());
     let (new_contract_hash, new_contract_version) =
         storage::add_contract_version(contract_package.into(), entry_points, named_keys);
  
@@ -93,7 +93,8 @@ pub extern "C" fn call() {
 
         entry_points
     };
-    
+
+	println!("ma");    
     // this should overwrite the previous contract obj with the new contract obj at the same uref
     let mut named_keys = NamedKeys::new();
     named_keys.insert(ACCESS_TOKEN.to_string(), access_token.into());

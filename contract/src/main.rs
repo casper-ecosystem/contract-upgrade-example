@@ -16,7 +16,7 @@ use casperlabs_types::{CLType,runtime_args, U512, RuntimeArgs, CLTyped, Key, CLV
 };
 
 const METHOD_GET_TEXT: &str = "get_text";
-const METHOD_DEPOSIT_V2: &str = "deposit_v2";
+//const METHOD_DEPOSIT_V2: &str = "deposit_v2";
 const METHOD_UPGRADE: &str = "upgrade_to";
 const INCOMMING_PURSE: &str = "incomming_purse";
 const CONTRACT_PACKAGE: &str = "contract_package";
@@ -108,6 +108,7 @@ pub extern "C" fn call() {
         storage::add_contract_version(contract_package, entry_points, named_keys);
  
     runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
+ set_key(CONTRACT_PACKAGE, contract_package); // stores contract package hash under account's named key
     set_key(CONTRACT_HASH, new_contract_hash);
     set_key(CONTRACT_VERSION, new_contract_version);
 }

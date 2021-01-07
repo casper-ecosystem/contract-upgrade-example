@@ -10,8 +10,8 @@ mod tests {
     const METHOD_UPGRADE: &str = "upgrade_to";
     const INCOMMING_PURSE: &str = "incomming_purse";
     const ACCESS_TOKEN: &str = "access_token";
-    const CONTRACT_NAME: &str = "deposit_box";
-    const CONTRACT_HASH: &str = "deposit_box_hash";
+    const CONTRACT_NAME: &str = "text_contract";
+    const CONTRACT_HASH: &str = "text_contract_hash";
     const CONTRACT_VERSION: &str = "contract_version";
     const TEXT_KEY: &str = "text";
     const TEXT_VALUE_V1: &str = "value_one";
@@ -19,7 +19,7 @@ mod tests {
 
     #[test]
     fn should_store_hello_world() {
-	let ac_fluff = U512::from(128_000_000); 
+	    let ac_fluff = U512::from(128_000_000); 
         let mut context = TestContextBuilder::new()
             .with_account(MY_ACCOUNT, ac_fluff)
             .build();
@@ -30,51 +30,78 @@ mod tests {
             .with_address(MY_ACCOUNT)
             .with_authorization_keys(&[MY_ACCOUNT])
             .build();
-        
-	println!("context running");
         context.run(session);
-	println!("get contract version");
-        assert_eq!(get_contract_version_v1(&context), 1);
 
-        let mut context2 = TestContextBuilder::new()
-            .with_account(MY_ACCOUNT, ac_fluff)
-            .build();
+        let session_code = Code::from("installer.wasm");
+        let session_args = runtime_args! {};
+        let session = SessionBuilder::new(session_code, session_args)
+        .with_address(MY_ACCOUNT)
+        .with_authorization_keys(&[MY_ACCOUNT])
+        .build();
+        context.run(session);
 
-        let session_code2 = Code::from("installer.wasm");
-//	let package_hash: ContractPackageHash = get_contract_hash(&context);
-        let session_args2 = runtime_args! {
-//	"package_hash" => package_hash,
-	"access_token" => ACCESS_TOKEN,
-};
-        let session2 = SessionBuilder::new(session_code2, session_args2)
-            .with_address(MY_ACCOUNT)
-            .with_authorization_keys(&[MY_ACCOUNT])
-            .build();
+        call_contract_package_set_text(&mut context);
+        println!("{:?}", get_text(&context));
         
-	println!("context2 running");
-        context2.run(session2);
+        println!("{:?}", get_installer_package(&context));
+        
+        call_contract_package_upgrade(&mut context);
+        call_contract_package_set_text(&mut context);
+        println!("{:?}", get_text(&context));
 
-	println!("calling upgrade");
-//        call_upgrade_v1(&mut context2, ACCESS_TOKEN.to_string());
+        // 	    println!("context running");
+// 	    println!("get contract version");
+//         assert_eq!(get_contract_version_v1(&context), 1);
+
+//         let mut context2 = TestContextBuilder::new()
+//             .with_account(MY_ACCOUNT, ac_fluff)
+//             .build();
+
+//         let session_code2 = Code::from("installer.wasm");
+//         let session_args2 = runtime_args! {
+//             "package_hash" => package_hash,
+//             "access_token" => ACCESS_TOKEN,
+//         };
+//         let session2 = SessionBuilder::new(session_code2, session_args2)
+//             .with_address(MY_ACCOUNT)
+//             .with_authorization_keys(&[MY_ACCOUNT])
+//             .build();
+        
+// 	    println!("context2 running");
+//         context2.run(session2);
+
+// 	    println!("calling upgrade");
+// //        call_upgrade_v1(&mut context2, ACCESS_TOKEN.to_string());
 
 
-	let contracthash: ContractPackageHash = get_contract_hash(&context).into();
-        call_install(&mut context2, ACCESS_TOKEN.to_string(), contracthash);
-	println!("get text calling");
-        assert_eq!(get_text(&context), TEXT_VALUE_V2);
-        // assert_eq!(get_contract_version_v2(&context), 2);
-	println!("Contract upgraded!");
+// 	    let contracthash: ContractPackageHash = get_contract_package(&context).into();
+//         call_install(&mut context2, ACCESS_TOKEN.to_string(), contracthash);
+// 	    println!("get text calling");
+//         assert_eq!(get_text(&context), TEXT_VALUE_V2);
+//         // assert_eq!(get_contract_version_v2(&context), 2);
+// 	    println!("Contract upgraded!");
     }
 
+	// fn call_install(context: &mut TestContext, accesstoken: String, contracthash: ContractHash) {
+    //     let code = Code::Hash(contracthash, "install".to_string());
+    //     let args = runtime_args! {
+    //         "package_hash" => contracthash,
+    //         "access_token" => accesstoken,
+    //     };
+    //     let session = SessionBuilder::new(code, args)
+    //         .with_address(MY_ACCOUNT)
+    //         .with_authorization_keys(&[MY_ACCOUNT])
+    //         .build();
+    //     context.run(session);
+    // }
 
 
-	fn call_install(context: &mut TestContext, accesstoken: String, contracthash: ContractHash) {
-
-	let code = Code::Hash(contracthash, "install".to_string());
-	let args = runtime_args! {
-		"package_hash" => contracthash,
-		"access_token" => accesstoken,
-	};
+	fn call_contract_package_set_text(context: &mut TestContext) {
+        let contract_package_hash = get_contract_package(&context);
+        let code = Code::from("call-set-text.wasm");
+        let args = runtime_args! {
+            "contract_package" => contract_package_hash,
+        };
         let session = SessionBuilder::new(code, args)
             .with_address(MY_ACCOUNT)
             .with_authorization_keys(&[MY_ACCOUNT])
@@ -82,20 +109,34 @@ mod tests {
         context.run(session);
     }
 
-
-	fn call_upgrade_v1(context: &mut TestContext, accesstoken: String) {
-	let contract_hash = get_contract_hash(&context);
-	let code = Code::Hash(contract_hash, METHOD_UPGRADE.to_string());
-	let args = runtime_args! {
-		"package_hash" => contract_hash,
-//		"access_token" => accesstoken,
-	};
+	fn call_contract_package_upgrade(context: &mut TestContext) {
+        let contract_package = get_contract_package(&context);
+        let installer_package = get_installer_package(&context);
+        let code = Code::from("call-upgrade.wasm");
+        let args = runtime_args! {
+            "contract_package" => contract_package,
+            "installer_package" => installer_package,
+        };
         let session = SessionBuilder::new(code, args)
             .with_address(MY_ACCOUNT)
             .with_authorization_keys(&[MY_ACCOUNT])
             .build();
         context.run(session);
     }
+
+    // fn install_the_installer()
+    // fn call_contract_package_ugr(context: &mut TestContext) {
+    //     let contract_package_hash = get_contract_package(&context);
+    //     let code = Code::from("call-set-text.wasm");
+    //     let args = runtime_args! {
+    //         "contract_package" => contract_package_hash,
+    //     };
+    //     let session = SessionBuilder::new(code, args)
+    //         .with_address(MY_ACCOUNT)
+    //         .with_authorization_keys(&[MY_ACCOUNT])
+    //         .build();
+    //     context.run(session);
+    // }
 
     fn get_contract_version_v1(context: &TestContext) -> u32 {
         query_account(context, CONTRACT_VERSION).unwrap()
@@ -105,8 +146,12 @@ mod tests {
         query_contract(context, CONTRACT_VERSION).unwrap()
     }
 
-    fn get_contract_hash(context: &TestContext) -> ContractHash {
+    fn get_contract_package(context: &TestContext) -> ContractHash {
         query_account(context, "contract_package").unwrap()
+    }
+
+    fn get_installer_package(context: &TestContext) -> ContractHash {
+        query_account(context, "installer_package").unwrap()
     }
 
     fn get_text(context: &TestContext) -> String {

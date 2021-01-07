@@ -10,68 +10,46 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType,runtime_args, U512, RuntimeArgs, CLTyped, Key, CLValue,
-    bytesrepr::{FromBytes, ToBytes},
-    contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
+use casperlabs_types::{CLType,runtime_args, U512, RuntimeArgs, CLTyped, CLValue,
+    bytesrepr::{FromBytes, ToBytes}, URef, Key,
+    contracts::{EntryPoints, EntryPoint, NamedKeys, EntryPointAccess, EntryPointType},
+    ContractPackageHash, ContractVersion
 };
 
-const METHOD_GET_TEXT: &str = "get_text";
-//const METHOD_DEPOSIT_V2: &str = "deposit_v2";
+const METHOD_SET_TEXT: &str = "set_text";
 const METHOD_UPGRADE: &str = "upgrade_to";
-const INCOMMING_PURSE: &str = "incomming_purse";
-const CONTRACT_PACKAGE: &str = "contract_package";
-const ACCESS_TOKEN: &str = "access_token";
-const CONTRACT_NAME: &str = "deposit_box";
-const CONTRACT_HASH: &str = "deposit_box_hash";
+const METHOD_GET_ACCESS_TOKEN: &str = "get_access_token";
 
+const ACCESS_TOKEN: &str = "access_token";
+const CONTRACT_PACKAGE: &str = "contract_package";
+const CONTRACT_NAME: &str = "text_contract";
+const CONTRACT_HASH: &str = "text_contract_hash";
 const CONTRACT_VERSION: &str = "contract_version";
+
 const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V1: &str = "value_one";
-const TEXT_VALUE_V2: &str = "value_two";
 
 
 #[no_mangle]
-pub extern "C" fn get_text() {
+pub extern "C" fn set_text() {
     set_key(TEXT_KEY, TEXT_VALUE_V1)
 }
 
-
-
 #[no_mangle]
 pub extern "C" fn upgrade_to() {
-    let installer_hash: [u8; 32] = runtime::get_named_arg("package_hash");
-    runtime::call_contract::<U512>(
-        installer_hash, 
-        "install", 
-        runtime_args! {
-            "package_hash" => runtime::get_key(CONTRACT_PACKAGE),
-            "access_token" => runtime::get_key(ACCESS_TOKEN)
-        }
-    );
-
-    // // let entry_points = {
-    // //     let mut entry_points = EntryPoints::new();
-    // //     let deposit = EntryPoint::new(
-    // //         METHOD_DEPOSIT_V2,
-    // //         vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
-    // //         CLType::Unit,
-    // //         EntryPointAccess::Public,
-    // //         EntryPointType::Contract,
-    // //     );
-    // //     entry_points.add_entry_point(deposit);
-    // //     entry_points
-    // // };
-
-    // let contract_package = runtime::get_key(CONTRACT_PACKAGE).unwrap().into_hash().unwrap();
-
-    // let (new_contract_hash, new_contract_version) =
-    //     storage::add_contract_version(contract_package, entry_points, NamedKeys::new());
+    let installer_package: ContractPackageHash = runtime::get_named_arg("installer_package");
+    let contract_package: ContractPackageHash = get_key(CONTRACT_PACKAGE);
     
-    // runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
-    // set_key(CONTRACT_HASH, new_contract_hash);
-    // set_key(CONTRACT_VERSION, new_contract_version);
+    runtime::call_versioned_contract(installer_package, None, "install", runtime_args! {
+        "contract_package" => contract_package,
+    })
 }
 
+#[no_mangle]
+pub extern "C" fn get_access_token() {
+    let access_token: URef = runtime::get_key(ACCESS_TOKEN).unwrap_or_revert().into_uref().unwrap_or_revert();
+    runtime::ret(CLValue::from_t(access_token).unwrap());
+}
 
 #[no_mangle]
 pub extern "C" fn call() {
@@ -80,8 +58,8 @@ pub extern "C" fn call() {
     let entry_points = {
         let mut entry_points = EntryPoints::new();
         let deposit = EntryPoint::new(
-            METHOD_GET_TEXT,
-            vec![Parameter::new(INCOMMING_PURSE, CLType::URef)],
+            METHOD_SET_TEXT,
+            vec![],
             CLType::Unit,
             EntryPointAccess::Public,
             EntryPointType::Contract,
@@ -97,20 +75,29 @@ pub extern "C" fn call() {
         );
         entry_points.add_entry_point(upgrade);
 
+        let get_access_token = EntryPoint::new(
+            METHOD_GET_ACCESS_TOKEN,
+            vec![],
+            CLType::URef,
+            EntryPointAccess::Public,
+            EntryPointType::Contract,
+        );
+        entry_points.add_entry_point(get_access_token);
+
         entry_points
     };
     
     // this should overwrite the previous contract obj with the new contract obj at the same uref
     let mut named_keys = NamedKeys::new();
     named_keys.insert(ACCESS_TOKEN.to_string(), access_token.into());
-    named_keys.insert(CONTRACT_PACKAGE.to_string(), contract_package.into());
+    named_keys.insert(CONTRACT_PACKAGE.to_string(), storage::new_uref(contract_package).into());
     let (new_contract_hash, new_contract_version) =
         storage::add_contract_version(contract_package, entry_points, named_keys);
- 
+    
+    
     runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
- set_key(CONTRACT_PACKAGE, contract_package); // stores contract package hash under account's named key
+    set_key(CONTRACT_PACKAGE, contract_package); // stores contract package hash under account's named key
     set_key(CONTRACT_HASH, new_contract_hash);
-    set_key(CONTRACT_VERSION, new_contract_version);
 }
 
 fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {

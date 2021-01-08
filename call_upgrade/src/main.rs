@@ -4,29 +4,13 @@
 )]
 #![no_main]
 
-use core::convert::TryInto;
+// This contract executes the contract package based on a contract package hash that we give it then calls theupgrade_to function in that contract with a contract hash to our installer contract, upgrading our functions in the first contract
 
-use casperlabs_contract::{
-    contract_api::{runtime, storage},
-    unwrap_or_revert::UnwrapOrRevert,
-};
-use casperlabs_types::{CLType,runtime_args, U512, RuntimeArgs, CLTyped,
-    bytesrepr::{FromBytes, ToBytes}, URef,
-    contracts::{EntryPoints, EntryPoint, NamedKeys, EntryPointAccess, EntryPointType},
-    ContractPackageHash, ContractVersion
+use casperlabs_contract::contract_api::runtime;
+use casperlabs_types::{runtime_args, RuntimeArgs, 
+    ContractPackageHash
 };
 
-const METHOD_SET_TEXT: &str = "set_text";
-const METHOD_UPGRADE: &str = "upgrade_to";
-
-const ACCESS_TOKEN: &str = "access_token";
-const CONTRACT_PACKAGE: &str = "contract_package";
-const CONTRACT_NAME: &str = "text_contract";
-const CONTRACT_HASH: &str = "text_contract_hash";
-const CONTRACT_VERSION: &str = "contract_version";
-
-const TEXT_KEY: &str = "text";
-const TEXT_VALUE_V1: &str = "value_one";
 
 #[no_mangle]
 pub extern "C" fn call() {

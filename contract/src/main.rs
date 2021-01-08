@@ -3,6 +3,7 @@
     crate_type = "target arch should be wasm32"
 )]
 #![no_main]
+// This contract creates a basic contract with a upgrade method
 
 use core::convert::TryInto;
 
@@ -10,10 +11,10 @@ use casperlabs_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType,runtime_args, U512, RuntimeArgs, CLTyped, CLValue,
-    bytesrepr::{FromBytes, ToBytes}, URef, Key,
+use casperlabs_types::{CLType,runtime_args, RuntimeArgs, CLTyped, CLValue,
+    bytesrepr::{FromBytes, ToBytes}, URef,
     contracts::{EntryPoints, EntryPoint, NamedKeys, EntryPointAccess, EntryPointType},
-    ContractPackageHash, ContractVersion
+    ContractPackageHash
 };
 
 const METHOD_SET_TEXT: &str = "set_text";
@@ -24,7 +25,6 @@ const ACCESS_TOKEN: &str = "access_token";
 const CONTRACT_PACKAGE: &str = "contract_package";
 const CONTRACT_NAME: &str = "text_contract";
 const CONTRACT_HASH: &str = "text_contract_hash";
-const CONTRACT_VERSION: &str = "contract_version";
 
 const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V1: &str = "value_one";
@@ -91,7 +91,7 @@ pub extern "C" fn call() {
     let mut named_keys = NamedKeys::new();
     named_keys.insert(ACCESS_TOKEN.to_string(), access_token.into());
     named_keys.insert(CONTRACT_PACKAGE.to_string(), storage::new_uref(contract_package).into());
-    let (new_contract_hash, new_contract_version) =
+    let (new_contract_hash, _) =
         storage::add_contract_version(contract_package, entry_points, named_keys);
     
     

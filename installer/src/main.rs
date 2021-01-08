@@ -12,18 +12,14 @@ use casperlabs_contract::{
 };
 use casperlabs_types::{CLType, URef, CLTyped, ContractPackageHash, RuntimeArgs, runtime_args,
     bytesrepr::{ToBytes},
-    contracts::{EntryPoints, EntryPoint, NamedKeys, Parameter, EntryPointAccess, EntryPointType}
+    contracts::{EntryPoints, EntryPoint, Parameter, EntryPointAccess, EntryPointType}
 };
 
 const METHOD_SET_TEXT: &str = "set_text";
 const METHOD_INSTALL: &str = "install";
 const CONTRACT_PACKAGE: &str = "installer_package";
-const ACCESS_TOKEN: &str = "access_token";
-
 const CONTRACT_NAME: &str = "installer_contract";
 const CONTRACT_HASH: &str = "installer_contract_hash";
-const CONTRACT_VERSION: &str = "contract_version";
-
 const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V2: &str = "value_two";
 
@@ -36,8 +32,7 @@ pub extern "C" fn set_text() {
 #[no_mangle]
 pub extern "C" fn install() {
     let contract_package: ContractPackageHash = runtime::get_named_arg("contract_package");
-    let access_token: URef = runtime::call_versioned_contract(contract_package, None, "get_access_token", runtime_args!{});
-
+    let _access_token: URef = runtime::call_versioned_contract(contract_package, None, "get_access_token", runtime_args!{});
 
     // // 1. Create endpoints.
     let entry_points = {
@@ -61,7 +56,7 @@ pub extern "C" fn install() {
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let (contract_package, access_token) = storage::create_contract_package_at_hash();
+    let (contract_package, _access_token) = storage::create_contract_package_at_hash();
     
     let entry_points = {
         let mut entry_points = EntryPoints::new();
@@ -90,7 +85,7 @@ pub extern "C" fn call() {
     };
 
     // this should overwrite the previous contract obj with the new contract obj at the same uref
-    let (new_contract_hash, new_contract_version) =
+    let (new_contract_hash, _) =
         storage::add_contract_version(contract_package, entry_points, Default::default());
  
     runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
@@ -99,15 +94,6 @@ pub extern "C" fn call() {
 
 }
 
-// fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {
-//     match runtime::get_key(name) {
-//         None => Default::default(),
-//         Some(value) => {
-//             let key = value.try_into().unwrap_or_revert();
-//             storage::read(key).unwrap_or_revert().unwrap_or_revert()
-//         }
-//     }
-// }
 
 fn set_key<T: ToBytes + CLTyped>(name: &str, value: T) {
     match runtime::get_key(name) {

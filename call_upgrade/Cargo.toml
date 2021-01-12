@@ -7,8 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-casperlabs-contract = "0.6.1"
-casperlabs-types = "0.6.1"
+casper-contract = "0.2.1"
+casper-types = "0.2.1"
 
 [[bin]]
 name = "call-upgrade"
@@ -18,7 +18,7 @@ doctest = false
 test = false
 
 [features]
-default = ["casperlabs-contract/std", "casperlabs-types/std", "casperlabs-contract/test-support"]
+default = ["casper-contract/std", "casper-types/std", "casper-contract/test-support"]
 
 [profile.release]
 lto = true

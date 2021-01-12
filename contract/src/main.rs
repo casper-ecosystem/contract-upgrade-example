@@ -7,11 +7,11 @@
 
 use core::convert::TryInto;
 
-use casperlabs_contract::{
+use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{
+use casper_types::{
     bytesrepr::{FromBytes, ToBytes},
     contracts::{
         EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys,

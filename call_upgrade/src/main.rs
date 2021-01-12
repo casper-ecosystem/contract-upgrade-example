@@ -6,8 +6,8 @@
 
 // This contract executes the contract package based on a contract package hash that we give it then calls theupgrade_to function in that contract with a contract hash to our installer contract, upgrading our functions in the first contract
 
-use casperlabs_contract::contract_api::runtime;
-use casperlabs_types::{runtime_args, RuntimeArgs, 
+use casper_contract::contract_api::runtime;
+use casper_types::{runtime_args, RuntimeArgs, 
     ContractPackageHash
 };
 

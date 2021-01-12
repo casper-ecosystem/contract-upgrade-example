@@ -5,8 +5,8 @@
 #![no_main]
 // This contract will call another contract and execute the "set_text" function in the external contract
 
-use casperlabs_contract::contract_api::runtime;
-use casperlabs_types::{runtime_args, ContractPackageHash, RuntimeArgs};
+use casper_contract::contract_api::runtime;
+use casper_types::{runtime_args, ContractPackageHash, RuntimeArgs};
 
 #[no_mangle]
 pub extern "C" fn call() {

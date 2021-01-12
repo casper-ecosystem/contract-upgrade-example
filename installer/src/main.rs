@@ -6,11 +6,11 @@
 
 use core::convert::TryInto;
 
-use casperlabs_contract::{
+use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casperlabs_types::{CLType, URef, CLTyped, ContractPackageHash, RuntimeArgs, runtime_args,
+use casper_types::{CLType, URef, CLTyped, ContractPackageHash, RuntimeArgs, runtime_args,
     bytesrepr::{ToBytes},
     contracts::{EntryPoints, EntryPoint, Parameter, EntryPointAccess, EntryPointType}
 };

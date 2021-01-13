@@ -28,9 +28,10 @@ const ACCESS_TOKEN: &str = "access_token";
 const CONTRACT_PACKAGE: &str = "contract_package";
 const CONTRACT_NAME: &str = "text_contract";
 const CONTRACT_HASH: &str = "text_contract_hash";
-
+const ARG_INSTALLER_PACKAGE: &str = "installer_package";
 const TEXT_KEY: &str = "text";
 const TEXT_VALUE_V1: &str = "value_one";
+const EXTERNAL_METHOD: &str = "install";
 
 #[no_mangle]
 pub extern "C" fn set_text() {
@@ -40,13 +41,13 @@ pub extern "C" fn set_text() {
 #[no_mangle]
 pub extern "C" fn upgrade_to() {
     let installer_package: ContractPackageHash =
-        runtime::get_named_arg("installer_package");
+        runtime::get_named_arg(ARG_INSTALLER_PACKAGE);
     let contract_package: ContractPackageHash = get_key(CONTRACT_PACKAGE);
 
     runtime::call_versioned_contract(
         installer_package,
         None,
-        "install",
+	EXTERNAL_METHOD,
         runtime_args! {
             "contract_package" => contract_package,
         },

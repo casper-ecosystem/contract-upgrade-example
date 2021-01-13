@@ -10,3 +10,9 @@ test:
 	cp call_upgrade/target/wasm32-unknown-unknown/release/call-upgrade.wasm tests/wasm
 	
 	cd tests && cargo test -- --nocapture
+
+format:
+	cd contract && cargo fmt 
+	cd installer && cargo fmt
+	cd call_set_text && cargo fmt
+	cd call_upgrade && cargo fmt

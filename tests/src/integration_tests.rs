@@ -8,7 +8,11 @@ mod tests {
 // lets start up by creating an account with keys
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
 
-    const CONTRACT_NAME: &str = "text_contract";
+    const CONTRACT_NAME_TEXT: &str = "text_contract";
+    const CONTRACT_NAME_CONTRACT: &str = "contract.wasm"; 
+    const CONTRACT_NAME_INSTALLER: &str = "installer.wasm";
+    const CONTRACT_NAME_SET_TEXT: &str = "call-set-text.wasm";
+    const CONTRACT_CALL_UPGRADE: &str = "call-upgrade.wasm";
     const TEXT_KEY: &str = "text";
     const TEXT_VALUE_V1: &str = "value_one";
     const TEXT_VALUE_V2: &str = "value_two";
@@ -20,7 +24,7 @@ mod tests {
             .with_account(MY_ACCOUNT, U512::from(128_000_000)) // create it with our account, so we can use our keys all the way
             .build();
 	// lets use the wasm file our contract code has generated
-        let session_code = Code::from("contract.wasm");
+        let session_code = Code::from(CONTRACT_NAME_CONTRACT);
         let session_args = runtime_args! {};
         let session = SessionBuilder::new(session_code, session_args)
             .with_address(MY_ACCOUNT) //create the session with our account
@@ -29,7 +33,7 @@ mod tests {
         context.run(session); //run the first smartcontract "contract"
 
 	// lets now call our installer contract, so we can start the upgrade
-        let session_code = Code::from("installer.wasm");
+        let session_code = Code::from(CONTRACT_NAME_INSTALLER);
         let session_args = runtime_args! {};
         let session = SessionBuilder::new(session_code, session_args)
         .with_address(MY_ACCOUNT)
@@ -55,7 +59,7 @@ mod tests {
 	/// use the call-set-text to call the set text function in the contract we define 
 	fn call_contract_package_set_text(context: &mut TestContext) {
         let contract_package_hash = get_contract_package(&context); // grab the contract package hash that we want the call-set-text smart contract to use
-        let code = Code::from("call-set-text.wasm");
+        let code = Code::from(CONTRACT_NAME_SET_TEXT);
         let args = runtime_args! {
             "contract_package" => contract_package_hash, // we will pass the contract package as an argument so that call-set-text can read it
         };
@@ -72,7 +76,7 @@ mod tests {
         let contract_package = get_contract_package(&context);
         let installer_package = get_installer_package(&context);
 //lets execute our call-upgrade contract so we can upgrade the original contract with our new functions
-        let code = Code::from("call-upgrade.wasm");
+        let code = Code::from(CONTRACT_CALL_UPGRADE);
         let args = runtime_args! {
 // pass along the contract hashes of our installer and contract package
             "contract_package" => contract_package,
@@ -108,7 +112,7 @@ mod tests {
 
 /// Query a contract for a key with a context and the contracts package hash
     fn query_contract<T: CLTyped + FromBytes>(context: &TestContext, key: &str) -> Option<T> {
-        query(context, &[CONTRACT_NAME, key])
+        query(context, &[CONTRACT_NAME_TEXT, key])
     }
 
     fn query<T: CLTyped + FromBytes>(context: &TestContext, path: &[&str]) -> Option<T> {

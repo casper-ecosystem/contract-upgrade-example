@@ -3,7 +3,8 @@
     crate_type = "target arch should be wasm32"
 )]
 #![no_main]
-// This contract will call another contract and execute the "set_text" function in the external contract
+// This contract will call another contract
+// and execute the "set_text" function in the external contract.
 
 use casper_contract::contract_api::runtime;
 use casper_types::{runtime_args, ContractPackageHash, RuntimeArgs};

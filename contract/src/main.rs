@@ -47,7 +47,7 @@ pub extern "C" fn upgrade_to() {
     runtime::call_versioned_contract(
         installer_package,
         None,
-	EXTERNAL_METHOD,
+        EXTERNAL_METHOD,
         runtime_args! {
             "contract_package" => contract_package,
         },

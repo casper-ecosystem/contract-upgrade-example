@@ -16,3 +16,15 @@ format:
 	cd installer && cargo fmt
 	cd call_set_text && cargo fmt
 	cd call_upgrade && cargo fmt
+	cd tests && cargo fmt
+
+clean:
+	cd contract && cargo clean 
+	cd installer && cargo clean
+	cd call_set_text && cargo clean
+	cd call_upgrade && cargo clean
+	cd tests && cargo clean
+	rm tests/wasm/call-set-text.wasm
+	rm tests/wasm/call-upgrade.wasm
+	rm tests/wasm/installer.wasm
+	rm tests/wasm/contract.wasm

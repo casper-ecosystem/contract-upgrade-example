@@ -1,7 +1,4 @@
-#![cfg_attr(
-    not(target_arch = "wasm32"),
-    crate_type = "target arch should be wasm32"
-)]
+#![cfg_attr(not(target_arch = "wasm32"), crate_type = "target arch should be wasm32")]
 #![no_main]
 
 use core::convert::TryInto;
@@ -12,9 +9,7 @@ use casper_contract::{
 };
 use casper_types::{
     bytesrepr::ToBytes,
-    contracts::{
-        EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Parameter,
-    },
+    contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Parameter},
     runtime_args, CLType, CLTyped, ContractPackageHash, RuntimeArgs, URef,
 };
 
@@ -35,14 +30,9 @@ pub extern "C" fn set_text() {
 
 #[no_mangle]
 pub extern "C" fn install() {
-    let contract_package: ContractPackageHash =
-        runtime::get_named_arg(ARG_CONTRACT_PACKAGE);
-    let _access_token: URef = runtime::call_versioned_contract(
-        contract_package,
-        None,
-        EXTERNAL_METHOD,
-        runtime_args! {},
-    );
+    let contract_package: ContractPackageHash = runtime::get_named_arg(ARG_CONTRACT_PACKAGE);
+    let _access_token: URef =
+        runtime::call_versioned_contract(contract_package, None, EXTERNAL_METHOD, runtime_args! {});
 
     // // 1. Create endpoints.
     let entry_points = {
@@ -59,17 +49,12 @@ pub extern "C" fn install() {
     };
 
     // 2. Use package_hash from args to install v2.
-    let (_, _) = storage::add_contract_version(
-        contract_package.into(),
-        entry_points,
-        Default::default(),
-    );
+    let (_, _) = storage::add_contract_version(contract_package.into(), entry_points, Default::default());
 }
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let (contract_package, _access_token) =
-        storage::create_contract_package_at_hash();
+    let (contract_package, _access_token) = storage::create_contract_package_at_hash();
 
     let entry_points = {
         let mut entry_points = EntryPoints::new();
@@ -98,11 +83,7 @@ pub extern "C" fn call() {
     };
 
     // this should overwrite the previous contract obj with the new contract obj at the same uref
-    let (new_contract_hash, _) = storage::add_contract_version(
-        contract_package,
-        entry_points,
-        Default::default(),
-    );
+    let (new_contract_hash, _) = storage::add_contract_version(contract_package, entry_points, Default::default());
 
     runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
     set_key(CONTRACT_HASH, new_contract_hash);

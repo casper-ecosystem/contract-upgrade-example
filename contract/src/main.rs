@@ -1,7 +1,4 @@
-#![cfg_attr(
-    not(target_arch = "wasm32"),
-    crate_type = "target arch should be wasm32"
-)]
+#![cfg_attr(not(target_arch = "wasm32"), crate_type = "target arch should be wasm32")]
 #![no_main]
 // This contract creates a basic contract with a upgrade method
 
@@ -13,11 +10,8 @@ use casper_contract::{
 };
 use casper_types::{
     bytesrepr::{FromBytes, ToBytes},
-    contracts::{
-        EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys,
-    },
-    runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, RuntimeArgs,
-    URef,
+    contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys},
+    runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, RuntimeArgs, URef,
 };
 
 const METHOD_SET_TEXT: &str = "set_text";
@@ -40,8 +34,7 @@ pub extern "C" fn set_text() {
 
 #[no_mangle]
 pub extern "C" fn upgrade_to() {
-    let installer_package: ContractPackageHash =
-        runtime::get_named_arg(ARG_INSTALLER_PACKAGE);
+    let installer_package: ContractPackageHash = runtime::get_named_arg(ARG_INSTALLER_PACKAGE);
     let contract_package: ContractPackageHash = get_key(CONTRACT_PACKAGE);
 
     runtime::call_versioned_contract(
@@ -65,8 +58,7 @@ pub extern "C" fn get_access_token() {
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let (contract_package, access_token) =
-        storage::create_contract_package_at_hash();
+    let (contract_package, access_token) = storage::create_contract_package_at_hash();
 
     let entry_points = {
         let mut entry_points = EntryPoints::new();
@@ -103,15 +95,8 @@ pub extern "C" fn call() {
     // this should overwrite the previous contract obj with the new contract obj at the same uref
     let mut named_keys = NamedKeys::new();
     named_keys.insert(ACCESS_TOKEN.to_string(), access_token.into());
-    named_keys.insert(
-        CONTRACT_PACKAGE.to_string(),
-        storage::new_uref(contract_package).into(),
-    );
-    let (new_contract_hash, _) = storage::add_contract_version(
-        contract_package,
-        entry_points,
-        named_keys,
-    );
+    named_keys.insert(CONTRACT_PACKAGE.to_string(), storage::new_uref(contract_package).into());
+    let (new_contract_hash, _) = storage::add_contract_version(contract_package, entry_points, named_keys);
 
     runtime::put_key(CONTRACT_NAME, new_contract_hash.into());
     set_key(CONTRACT_PACKAGE, contract_package); // stores contract package hash under account's named key

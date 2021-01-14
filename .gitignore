@@ -1,2 +1,7 @@
 **/target
 Cargo.lock
+
+tests/wasm/call-set-text.wasm
+tests/wasm/call-upgrade.wasm
+tests/wasm/contract.wasm
+tests/wasm/installer.wasm

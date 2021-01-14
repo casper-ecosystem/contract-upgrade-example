@@ -11,11 +11,12 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
+    runtime_args,
     bytesrepr::ToBytes,
     contracts::{
         EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Parameter,
     },
-    runtime_args, CLType, CLTyped, ContractPackageHash, RuntimeArgs, URef,
+    CLType, CLTyped, ContractPackageHash, RuntimeArgs, URef,
 };
 
 const METHOD_SET_TEXT: &str = "set_text";
@@ -35,6 +36,7 @@ pub extern "C" fn set_text() {
 
 #[no_mangle]
 pub extern "C" fn install() {
+	println!("installer");
     let contract_package: ContractPackageHash =
         runtime::get_named_arg(ARG_CONTRACT_PACKAGE);
     let _access_token: URef = runtime::call_versioned_contract(
@@ -70,7 +72,7 @@ pub extern "C" fn install() {
 pub extern "C" fn call() {
     let (contract_package, _access_token) =
         storage::create_contract_package_at_hash();
-
+	println!("yes");
     let entry_points = {
         let mut entry_points = EntryPoints::new();
         let deposit = EntryPoint::new(

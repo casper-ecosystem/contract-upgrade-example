@@ -1,13 +1,13 @@
 #[cfg(test)]
 // This is a test file, demostrating how to upgrade our first contract
 mod tests {
-    use casperlabs_engine_test_support::{Code, SessionBuilder, TestContextBuilder, TestContext};
+    use casper_engine_test_support::{Code, SessionBuilder, TestContextBuilder, TestContext, AccountHash};
 
-    use casperlabs_types::{account::AccountHash, ContractHash, U512, RuntimeArgs, runtime_args, CLTyped, bytesrepr::FromBytes};
+    use casper_types::{ContractHash, U512, RuntimeArgs, runtime_args, CLTyped, bytesrepr::FromBytes};
 
 // lets start up by creating an account with keys
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
-
+    const DEFAULT_ACCOUNT_ADDR: AccountHash = MY_ACCOUNT;
     const CONTRACT_NAME_TEXT: &str = "text_contract";
     const CONTRACT_NAME_CONTRACT: &str = "contract.wasm"; 
     const CONTRACT_NAME_INSTALLER: &str = "installer.wasm";
@@ -20,10 +20,12 @@ mod tests {
     #[test]
     fn upgrade_contract_text() {
 	// In order to run the contracts, we will create a context and attach our contracts to it
+	println!("pong");
         let mut context = TestContextBuilder::new()
-            .with_account(MY_ACCOUNT, U512::from(128_000_000)) // create it with our account, so we can use our keys all the way
+//            .with_account(MY_ACCOUNT, U512::from(128_000_000)) // create it with our account, so we can use our keys all the way
             .build();
 	// lets use the wasm file our contract code has generated
+	println!("fluff");
         let session_code = Code::from(CONTRACT_NAME_CONTRACT);
         let session_args = runtime_args! {};
         let session = SessionBuilder::new(session_code, session_args)
@@ -31,7 +33,7 @@ mod tests {
             .with_authorization_keys(&[MY_ACCOUNT]) 
             .build();
         context.run(session); //run the first smartcontract "contract"
-
+	println!("running");
 	// lets now call our installer contract, so we can start the upgrade
         let session_code = Code::from(CONTRACT_NAME_INSTALLER);
         let session_args = runtime_args! {};

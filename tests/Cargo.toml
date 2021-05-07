@@ -9,13 +9,13 @@ edition = "2018"
 [dependencies]
 
 [dev-dependencies]
-casperlabs-contract = "0.6.1"
-casperlabs-types = "0.6.1"
-casperlabs-engine-test-support = "0.8.1"
+casper-contract = "1.1.1"
+casper-types = "1.1.1"
+casper-engine-test-support = "1.1.1"
 
 [[bin]]
 name = "integration-tests"
 path = "src/integration_tests.rs"
 
 [features]
-default = ["casperlabs-contract/std", "casperlabs-types/std", "casperlabs-engine-test-support/test-support", "casperlabs-contract/test-support"]
+default = ["casper-contract/std", "casper-types/std", "casper-engine-test-support/test-support", "casper-contract/test-support"]

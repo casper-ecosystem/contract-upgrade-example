@@ -35,7 +35,7 @@ pub extern "C" fn get_access() {
 
 #[no_mangle]
 pub extern "C" fn upgrade_me() {
-    let this_contract_hash: ContractPackageHash = get_key("messanger_package");
+    let this_contract_hash: ContractPackageHash = get_key("messenger_package");
     runtime::call_versioned_contract(
         runtime::get_named_arg::<ContractPackageHash>("upgrader"),
         None,
@@ -80,7 +80,7 @@ pub extern "C" fn call() {
     named_keys.insert("ACCESS_TOKEN".to_string(), access_token.into());
     let (_stored_contract_hash, _) =
         storage::add_contract_version(contract_package_hash, entry_points, named_keys);
-    set_key("contract_package_hash", contract_package_hash);
+    set_key("messenger_package_hash", contract_package_hash);
 }
 
 fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {

@@ -24,7 +24,7 @@ pub extern "C" fn get_text() {}
 pub extern "C" fn call() {
     //1. call package hash set_text
     let text: String = runtime::call_versioned_contract(
-        get_key("contract_package_hash"),
+        get_key("messenger_package_hash"),
         None,
         "get_text",
         casper_types::runtime_args! {},
@@ -35,14 +35,14 @@ pub extern "C" fn call() {
     }
     //3. call upgrade on the contract with passing the upgrader as the argument
     let _ = runtime::call_versioned_contract::<()>(
-        get_key("contract_package_hash"),
+        get_key("messenger_package_hash"),
         None,
         "upgrade_me",
-        casper_types::runtime_args! {"upgrader" => get_key::<ContractPackageHash>("upgrader_hash")},
+        casper_types::runtime_args! {"upgrader" => get_key::<ContractPackageHash>("installer_hash")},
     );
     //4. call package hash get_text on the upgraded contract
     let text_2: String = runtime::call_versioned_contract(
-        get_key("contract_package_hash"),
+        get_key("messenger_package_hash"),
         None,
         "get_text",
         casper_types::runtime_args! {},

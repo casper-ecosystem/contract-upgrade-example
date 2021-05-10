@@ -69,7 +69,7 @@ pub extern "C" fn call() {
 
     let (stored_contract_hash, _) =
         storage::add_contract_version(contract_hash.into(), entry_points, Default::default());
-    set_key("upgrader_hash", contract_hash);
+    set_key("installer_hash", contract_hash);
 }
 
 fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {

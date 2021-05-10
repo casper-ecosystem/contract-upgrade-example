@@ -24,7 +24,7 @@ impl ContractUpgrader {
     }
 
     pub fn deploy_base_contract(&mut self) {
-        let base_code = Code::from("contract.wasm");
+        let base_code = Code::from("messenger.wasm");
         let base_args = runtime_args! {};
         let base_session = SessionBuilder::new(base_code, base_args)
             .with_address(self.account_addr)
@@ -35,7 +35,7 @@ impl ContractUpgrader {
     }
 
     pub fn deploy_upgrader_contract(&mut self) {
-        let upgrader_code = Code::from("upgrader.wasm");
+        let upgrader_code = Code::from("installer.wasm");
         let upgrader_args = runtime_args! {};
         let upgrader_session = SessionBuilder::new(upgrader_code, upgrader_args)
             .with_address(self.account_addr)

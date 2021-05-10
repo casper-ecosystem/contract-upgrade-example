@@ -17,8 +17,8 @@ doctest = false
 test = false
 
 [[bin]]
-name = "upgrader"
-path = "src/upgrader.rs"
+name = "installer"
+path = "src/installer.rs"
 bench = false
 doctest = false
 test = false

@@ -2,12 +2,7 @@
     not(target_arch = "wasm32"),
     crate_type = "target arch should be wasm32"
 )]
-#![no_main]
 
-use casper_types::ApiError;
-use casper_types::ContractPackageHash;
-use casper_types::Key;
-use casper_types::URef;
 use core::convert::TryInto;
 
 use casper_contract::{
@@ -15,30 +10,26 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
-    bytesrepr::{FromBytes, ToBytes},
+    bytesrepr::FromBytes,
     contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys},
-    CLType, CLTyped, CLValue, RuntimeArgs,
+    CLType, CLTyped, CLValue, ContractPackageHash, RuntimeArgs, URef,
 };
-
 
 #[no_mangle]
 pub extern "C" fn upgrade() {
-    let dao_contract_hash: ContractPackageHash = get_key("dao_contract_hash");
-    let messenger_package_hash: ContractPackageHash = get_key("messenger_package_hash");
     runtime::call_versioned_contract(
         runtime::get_named_arg::<ContractPackageHash>("installer_package_hash"),
         None,
         "install",
         casper_types::runtime_args! {
-            "dao_contract_hash" => dao_contract_hash,
-            "messenger_package_hash" => messenger_package_hash
+            "dao_contract_hash" => get_key::<ContractPackageHash>("DAO_CONTRACT_HASH"),
+            "messenger_package_hash" => get_key::<ContractPackageHash>("MESSENGER_PACKAGE_HASH")
         },
     )
 }
 
 #[no_mangle]
 pub extern "C" fn get_messenger_access() {
-    runtime::revert(ApiError::User(69));
     let access_token: URef = runtime::get_key("MESSENGER_ACCESS_TOKEN")
         .unwrap()
         .try_into()
@@ -71,10 +62,7 @@ pub fn deploy_dao(messenger_package_hash: ContractPackageHash, access_token: URe
         "DAO_CONTRACT_HASH".to_string(),
         storage::new_uref(dao_contract_hash).into(),
     );
-    dao_named_keys.insert(
-        "MESSENGER_ACCESS_TOKEN".to_string(),
-        access_token.into(),
-    );
+    dao_named_keys.insert("MESSENGER_ACCESS_TOKEN".to_string(), access_token.into());
     dao_named_keys.insert(
         "MESSENGER_PACKAGE_HASH".to_string(),
         casper_types::Key::URef(storage::new_uref(messenger_package_hash)),
@@ -82,11 +70,10 @@ pub fn deploy_dao(messenger_package_hash: ContractPackageHash, access_token: URe
     let (_stored_contract_hash, _) =
         storage::add_contract_version(dao_contract_hash, dao_entry_points, dao_named_keys);
 
-    // runtime::put_key(
-    //     "dao_hash",
-    //     casper_types::Key::URef(storage::new_uref(dao_contract_hash)),
-    // );    
-    set_key("dao_contract_hash", dao_contract_hash);
+    runtime::put_key(
+        "dao_contract_hash",
+        casper_types::Key::URef(storage::new_uref(dao_contract_hash)),
+    );
 }
 
 fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {
@@ -95,19 +82,6 @@ fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {
         Some(value) => {
             let key = value.try_into().unwrap_or_revert();
             storage::read(key).unwrap_or_revert().unwrap_or_revert()
-        }
-    }
-}
-
-fn set_key<T: ToBytes + CLTyped>(name: &str, value: T) {
-    match runtime::get_key(name) {
-        Some(key) => {
-            let key_ref = key.try_into().unwrap_or_revert();
-            storage::write(key_ref, value);
-        }
-        None => {
-            let key = storage::new_uref(value).into();
-            runtime::put_key(name, key);
         }
     }
 }

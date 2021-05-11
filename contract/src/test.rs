@@ -11,11 +11,7 @@ use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casper_types::{
-    bytesrepr::{FromBytes, ToBytes},
-    contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys},
-    runtime_args, ApiError, CLType, CLTyped, RuntimeArgs, URef,
-};
+use casper_types::{bytesrepr::FromBytes, ApiError, CLTyped, RuntimeArgs};
 
 #[no_mangle]
 pub extern "C" fn call() {
@@ -31,14 +27,12 @@ pub extern "C" fn call() {
         runtime::revert(ApiError::User(1));
     }
     //3. call upgrade on the contract with passing the upgrader as the argument
-    // runtime::revert(ApiError::User(67));
     let _ = runtime::call_versioned_contract::<()>(
         get_key("dao_contract_hash"),
         None,
         "upgrade",
         casper_types::runtime_args! {"installer_package_hash" => get_key::<ContractPackageHash>("installer_package_hash")},
     );
-    runtime::revert(ApiError::User(70));
     //4. call package hash get_message on the upgraded contract
     let text_2: String = runtime::call_versioned_contract(
         get_key("messenger_package_hash"),

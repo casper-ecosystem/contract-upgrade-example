@@ -10,6 +10,10 @@ test:
 
 	cd tests && cargo +nightly test -- --nocapture
 
+clippy:
+	cd contract && cargo +nightly clippy --target wasm32-unknown-unknown
+	cd tests && cargo +nightly clippy
+
 format:
 	cd contract && cargo fmt 
 	cd tests && cargo fmt

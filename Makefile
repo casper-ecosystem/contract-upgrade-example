@@ -7,7 +7,7 @@ test:
 	cp contract/target/wasm32-unknown-unknown/release/messenger.wasm tests/wasm
 	cp contract/target/wasm32-unknown-unknown/release/installer.wasm tests/wasm
 	cp contract/target/wasm32-unknown-unknown/release/test.wasm tests/wasm
-	
+
 	cd tests && cargo +nightly test -- --nocapture
 
 format:

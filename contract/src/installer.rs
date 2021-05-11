@@ -14,23 +14,25 @@ use casper_contract::{
 use casper_types::{
     bytesrepr::{FromBytes, ToBytes},
     contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys},
-    runtime_args, CLType, CLTyped, CLValue, RuntimeArgs, URef,
+    runtime_args, CLType, CLTyped, CLValue, RuntimeArgs, URef, ApiError
 };
 
 #[no_mangle]
-pub extern "C" fn get_text() {
+pub extern "C" fn get_message() {
     runtime::ret(CLValue::from_t("v2".to_string()).unwrap_or_revert());
 }
 
 #[no_mangle]
-pub extern "C" fn install_upgrade() {
-    let to_upgrade = runtime::get_named_arg::<ContractPackageHash>("to_upgrade");
-    let _access_token: URef =
-        runtime::call_versioned_contract(to_upgrade, None, "get_access", runtime_args! {});
+pub extern "C" fn install() {
+    let dao_contract_hash = runtime::get_named_arg::<ContractPackageHash>("dao_contract_hash");
+    let messenger_hash = runtime::get_named_arg::<ContractPackageHash>("messenger_package_hash");
+    let _messenger_access_token: URef =
+    runtime::call_versioned_contract(dao_contract_hash, None, "get_messenger_access", runtime_args! {});
+    runtime::revert(ApiError::User(69));
 
     let mut entry_points = EntryPoints::new();
     entry_points.add_entry_point(EntryPoint::new(
-        "get_text",
+        "get_message",
         vec![],
         CLType::String,
         EntryPointAccess::Public,
@@ -38,7 +40,7 @@ pub extern "C" fn install_upgrade() {
     ));
 
     let (_stored_contract_hash, _) =
-        storage::add_contract_version(to_upgrade.into(), entry_points, Default::default());
+        storage::add_contract_version(messenger_hash.into(), entry_points, Default::default());
 }
 
 #[no_mangle]
@@ -46,7 +48,7 @@ pub extern "C" fn call() {
     let (contract_hash, access_token) = storage::create_contract_package_at_hash();
     let mut entry_points = EntryPoints::new();
     entry_points.add_entry_point(EntryPoint::new(
-        "get_text",
+        "get_message",
         vec![],
         CLType::String,
         EntryPointAccess::Public,
@@ -54,7 +56,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "install_upgrade",
+        "install",
         vec![],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -69,7 +71,7 @@ pub extern "C" fn call() {
 
     let (stored_contract_hash, _) =
         storage::add_contract_version(contract_hash.into(), entry_points, Default::default());
-    set_key("installer_hash", contract_hash);
+    set_key("installer_package_hash", contract_hash);
 }
 
 fn get_key<T: FromBytes + CLTyped + Default>(name: &str) -> T {

@@ -16,7 +16,6 @@ impl ContractUpgrader {
         let context = TestContextBuilder::new()
             .with_public_key(public_key, U512::from("128000000000"))
             .build();
-
         Self {
             context,
             account_addr,
@@ -31,7 +30,7 @@ impl ContractUpgrader {
             .with_authorization_keys(&[self.account_addr])
             .build();
         self.context.run(base_session);
-        println!("deployed contract base version");
+        println!("deployed messenger version");
     }
 
     pub fn deploy_upgrader_contract(&mut self) {
@@ -42,7 +41,18 @@ impl ContractUpgrader {
             .with_authorization_keys(&[self.account_addr])
             .build();
         self.context.run(upgrader_session);
-        println!("deployed upgrader package")
+        println!("deployed installer package")
+    }
+
+    pub fn deploy_dao_contract(&mut self) {
+        let dao_code = Code::from("dao.wasm");
+        let dao_args = runtime_args! {};
+        let dao_session = SessionBuilder::new(dao_code, dao_args)
+            .with_address(self.account_addr)
+            .with_authorization_keys(&[self.account_addr])
+            .build();
+        self.context.run(dao_session);
+        println!("deployed dao package")
     }
 
     pub fn deploy_upgrader_test_contract(&mut self) {
@@ -53,7 +63,7 @@ impl ContractUpgrader {
             .with_authorization_keys(&[self.account_addr])
             .build();
         self.context.run(upgrader_test_session);
-        println!("deployed upgrader package")
+        println!("deployed test package")
     }
 
     pub fn set_text(&mut self) {

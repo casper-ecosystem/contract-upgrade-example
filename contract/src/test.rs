@@ -18,15 +18,12 @@ use casper_types::{
 };
 
 #[no_mangle]
-pub extern "C" fn get_text() {}
-
-#[no_mangle]
 pub extern "C" fn call() {
     //1. call package hash set_text
     let text: String = runtime::call_versioned_contract(
         get_key("messenger_package_hash"),
         None,
-        "get_text",
+        "get_message",
         casper_types::runtime_args! {},
     );
     //2. assert previous to 'v1'
@@ -34,17 +31,19 @@ pub extern "C" fn call() {
         runtime::revert(ApiError::User(1));
     }
     //3. call upgrade on the contract with passing the upgrader as the argument
+    // runtime::revert(ApiError::User(67));
     let _ = runtime::call_versioned_contract::<()>(
-        get_key("messenger_package_hash"),
+        get_key("dao_contract_hash"),
         None,
-        "upgrade_me",
-        casper_types::runtime_args! {"upgrader" => get_key::<ContractPackageHash>("installer_hash")},
+        "upgrade",
+        casper_types::runtime_args! {"installer_package_hash" => get_key::<ContractPackageHash>("installer_package_hash")},
     );
-    //4. call package hash get_text on the upgraded contract
+    runtime::revert(ApiError::User(70));
+    //4. call package hash get_message on the upgraded contract
     let text_2: String = runtime::call_versioned_contract(
         get_key("messenger_package_hash"),
         None,
-        "get_text",
+        "get_message",
         casper_types::runtime_args! {},
     );
     //5. assert previous to 'v2'

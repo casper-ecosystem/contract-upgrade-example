@@ -24,49 +24,38 @@ mod tests {
             }
         }
 
-        pub fn deploy_messenger_and_dao_contract(&mut self) {
-            let base_code = Code::from("messenger.wasm");
+        pub fn deploy_contract(&mut self, pack: &str) {
+            let base_code = Code::from(pack);
             let base_args = runtime_args! {};
             let base_session = SessionBuilder::new(base_code, base_args)
                 .with_address(self.account_addr)
                 .with_authorization_keys(&[self.account_addr])
                 .build();
             self.context.run(base_session);
-            println!("deployed messenger version");
-        }
-
-        pub fn deploy_upgrade_installer_contract(&mut self) {
-            let upgrader_code = Code::from("installer.wasm");
-            let upgrader_args = runtime_args! {};
-            let upgrader_session = SessionBuilder::new(upgrader_code, upgrader_args)
-                .with_address(self.account_addr)
-                .with_authorization_keys(&[self.account_addr])
-                .build();
-            self.context.run(upgrader_session);
-            println!("deployed installer package")
-        }
-
-        pub fn deploy_upgrader_test_contract(&mut self) {
-            let upgrader_test_code = Code::from("test.wasm");
-            let upgrader_test_args = runtime_args! {};
-            let upgrader_test_session = SessionBuilder::new(upgrader_test_code, upgrader_test_args)
-                .with_address(self.account_addr)
-                .with_authorization_keys(&[self.account_addr])
-                .build();
-            self.context.run(upgrader_test_session);
-            println!("deployed test package")
+            println!("deployed {}", pack);
         }
     }
 
-    #[test]
-    fn upgrade_contract_text() {
+    // #[test]
+    fn upgrade_messenger_with_dao() {
         let mut upgrade_test = ContractUpgrader::setup();
         // Deploy messenger and dao contracts
-        upgrade_test.deploy_messenger_and_dao_contract();
+        upgrade_test.deploy_contract("messenger.wasm");
         // Deploy upgrade installer package
-        upgrade_test.deploy_upgrade_installer_contract();
+        upgrade_test.deploy_contract("installer.wasm");
         // Deploy and run test scenario
-        upgrade_test.deploy_upgrader_test_contract();
+        upgrade_test.deploy_contract("test.wasm");
+    }
+
+    #[test]
+    fn insecure_upgrade() {
+        let mut upgrade_test = ContractUpgrader::setup();
+        // Deploy messenger and dao contracts
+        upgrade_test.deploy_contract("nonsec_messenger.wasm");
+        // Deploy upgrade installer package
+        upgrade_test.deploy_contract("nonsec_installer.wasm");
+        // Deploy and run test scenario
+        upgrade_test.deploy_contract("nonsec_test.wasm");
     }
 }
 

@@ -50,3 +50,14 @@ Applies formatting to the codes.
 
 ### clean
 Artifact removal command. (`.wasm` files, `target` folders)
+
+## Rust version
+This contract compiles and runs when using `rustc 1.53.0-nightly (42816d61e 2021-04-24)`
+
+## Casper contract sdk version
+casper-types = "1.1.1"
+casper-contract = "1.1.1"
+casper-engine-test-support = "1.1.1"
+
+
+### Date 14 May 2021

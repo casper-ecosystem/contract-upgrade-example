@@ -10,22 +10,12 @@ use casper_contract::{
 };
 use casper_types::{
     contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints},
-    CLType, CLValue, ContractPackageHash, RuntimeArgs,
+    CLType, CLValue,
 };
 
 #[no_mangle]
 pub extern "C" fn get_message() {
     runtime::ret(CLValue::from_t("v1".to_string()).unwrap_or_revert());
-}
-
-#[no_mangle]
-pub extern "C" fn upgrade() {
-    runtime::call_versioned_contract(
-        runtime::get_named_arg::<ContractPackageHash>("installer_package_hash"),
-        None,
-        "install",
-        casper_types::runtime_args! {},
-    )
 }
 
 #[no_mangle]
@@ -39,23 +29,10 @@ pub extern "C" fn call() {
         EntryPointType::Contract,
     ));
 
-    entry_points.add_entry_point(EntryPoint::new(
-        "upgrade",
-        vec![],
-        CLType::Unit,
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-
-    let (contract_hash, _version) = storage::new_contract(
+    let _ = storage::new_contract(
         entry_points,
         None,
         Some("messenger_package_hash".to_string()),
         Some("access_token".to_string()),
-    );
-
-    runtime::put_key(
-        "messenger_hash",
-        casper_types::Key::URef(storage::new_uref(contract_hash)),
     );
 }

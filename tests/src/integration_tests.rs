@@ -34,28 +34,29 @@ mod tests {
             self.context.run(base_session);
             println!("deployed {}", pack);
         }
-    }
 
-    // #[test]
-    fn upgrade_messenger_with_dao() {
-        let mut upgrade_test = ContractUpgrader::setup();
-        // Deploy messenger and dao contracts
-        upgrade_test.deploy_contract("messenger.wasm");
-        // Deploy upgrade installer package
-        upgrade_test.deploy_contract("installer.wasm");
-        // Deploy and run test scenario
-        upgrade_test.deploy_contract("test.wasm");
+        pub fn assert_msg(&mut self, msg: &str) {
+            let base_code = Code::from("test.wasm");
+            let base_args = runtime_args! {
+                "expected" => msg
+            };
+            let base_session = SessionBuilder::new(base_code, base_args)
+                .with_address(self.account_addr)
+                .with_authorization_keys(&[self.account_addr])
+                .build();
+            self.context.run(base_session);
+            println!("asserted {}", msg);
+        }
     }
 
     #[test]
-    fn insecure_upgrade() {
+    fn test_simple_upgrade() {
         let mut upgrade_test = ContractUpgrader::setup();
-        // Deploy messenger and dao contracts
-        upgrade_test.deploy_contract("nonsec_messenger.wasm");
-        // Deploy upgrade installer package
-        upgrade_test.deploy_contract("nonsec_installer.wasm");
-        // Deploy and run test scenario
-        upgrade_test.deploy_contract("nonsec_test.wasm");
+        upgrade_test.deploy_contract("installer.wasm");
+        upgrade_test.assert_msg("v1");
+
+        upgrade_test.deploy_contract("upgrader.wasm");
+        upgrade_test.assert_msg("v2");
     }
 }
 

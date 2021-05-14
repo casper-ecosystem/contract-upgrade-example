@@ -1,44 +1,27 @@
 prepare:
 	rustup target add wasm32-unknown-unknown
 
-test_sec:
-	cd secure_contract && cargo +nightly build --release --target wasm32-unknown-unknown
+build-contract:
+	cd simple_upgrade && cargo +nightly build --release --target wasm32-unknown-unknown
 
-	cp secure_contract/target/wasm32-unknown-unknown/release/messenger.wasm tests/wasm
-	cp secure_contract/target/wasm32-unknown-unknown/release/installer.wasm tests/wasm
-	cp secure_contract/target/wasm32-unknown-unknown/release/test.wasm tests/wasm
-
-
-test_nonsec:
-	cd not_secure_contract && cargo +nightly build --release --target wasm32-unknown-unknown
-
-	cp not_secure_contract/target/wasm32-unknown-unknown/release/nonsec_messenger.wasm tests/wasm
-	cp not_secure_contract/target/wasm32-unknown-unknown/release/nonsec_installer.wasm tests/wasm
-	cp not_secure_contract/target/wasm32-unknown-unknown/release/nonsec_test.wasm tests/wasm
+test-simple-upgrade:
+	cp simple_upgrade/target/wasm32-unknown-unknown/release/installer.wasm tests/wasm
+	cp simple_upgrade/target/wasm32-unknown-unknown/release/upgrader.wasm tests/wasm
+	cp simple_upgrade/target/wasm32-unknown-unknown/release/test.wasm tests/wasm
 
 	cd tests && cargo +nightly test -- --nocapture
 
-test: test_sec test_nonsec
+test: build-contract test-simple-upgrade
 
 clippy:
-	cd not_secure_contract && cargo +nightly clippy --target wasm32-unknown-unknown
-	cd secure_contract && cargo +nightly clippy --target wasm32-unknown-unknown
+	cd simple_upgrade && cargo +nightly clippy --target wasm32-unknown-unknown
 	cd tests && cargo +nightly clippy
 
 format:
-	cd not_secure_contract && cargo fmt 
-	cd secure_contract && cargo fmt 
+	cd simple_upgrade && cargo fmt 
 	cd tests && cargo fmt
 
 clean:
-	cd not_secure_contract && cargo clean
-	cd secure_contract && cargo clean 
+	cd simple_upgrade && cargo clean
 	cd tests && cargo clean
-
-	rm tests/wasm/messenger.wasm
-	rm tests/wasm/installer.wasm
-	rm tests/wasm/test.wasm
-
-	rm tests/wasm/nonsec_messenger.wasm
-	rm tests/wasm/nonsec_installer.wasm
-	rm tests/wasm/nonsec_test.wasm
+	rm tests/wasm/*.wasm

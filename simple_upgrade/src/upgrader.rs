@@ -13,6 +13,8 @@ use casper_types::{
     CLType, CLValue, ContractPackageHash,
 };
 
+/// Upgraded version of the version getter fuction, returning "v2" proving that the contract has gained
+/// and upgraded version
 #[no_mangle]
 pub extern "C" fn get_message() {
     runtime::ret(CLValue::from_t("v2".to_string()).unwrap_or_revert());

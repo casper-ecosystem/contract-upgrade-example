@@ -6,12 +6,14 @@ mod tests {
         RuntimeArgs, SecretKey, U512,
     };
 
+    /// Struct to hold test relevant data, such as context and account_hash
     pub struct ContractUpgrader {
         context: TestContext,
         account_addr: AccountHash,
     }
 
     impl ContractUpgrader {
+        /// Test context constructor
         pub fn setup() -> Self {
             let public_key: PublicKey = SecretKey::ed25519([1u8; 32]).into();
             let account_addr = AccountHash::from(&public_key);
@@ -24,6 +26,7 @@ mod tests {
             }
         }
 
+        /// Introduce a new contract to the test, that we try to open from the file ~/tests/wasm/$pack 
         pub fn deploy_contract(&mut self, pack: &str) {
             let base_code = Code::from(pack);
             let base_args = runtime_args! {};
@@ -35,6 +38,7 @@ mod tests {
             println!("deployed {}", pack);
         }
 
+        /// Execute the code of ~/tests/wasm/test.wasm with the argument named "expected"
         pub fn assert_msg(&mut self, msg: &str) {
             let base_code = Code::from("test.wasm");
             let base_args = runtime_args! {

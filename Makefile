@@ -5,9 +5,10 @@ build-contract:
 	cd simple_upgrade && cargo +nightly build --release --target wasm32-unknown-unknown
 
 test-simple-upgrade:
-	cp simple_upgrade/target/wasm32-unknown-unknown/release/installer.wasm tests/wasm
-	cp simple_upgrade/target/wasm32-unknown-unknown/release/upgrader.wasm tests/wasm
-	cp simple_upgrade/target/wasm32-unknown-unknown/release/test.wasm tests/wasm
+	mkdir -p tests/wasm
+	cp simple_upgrade/target/wasm32-unknown-unknown/release/installer.wasm tests/wasm/
+	cp simple_upgrade/target/wasm32-unknown-unknown/release/upgrader.wasm tests/wasm/
+	cp simple_upgrade/target/wasm32-unknown-unknown/release/test.wasm tests/wasm/
 
 	cd tests && cargo +nightly test -- --nocapture
 

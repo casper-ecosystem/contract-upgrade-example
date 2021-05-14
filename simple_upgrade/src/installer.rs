@@ -22,7 +22,7 @@ pub extern "C" fn get_message() {
 #[no_mangle]
 pub extern "C" fn call() {
     let mut entry_points = EntryPoints::new();
-    // Introduce a singular "get_message" entry point.
+    // Introduce a singular, public "get_message" entry point.
     entry_points.add_entry_point(EntryPoint::new(
         "get_message",
         vec![],

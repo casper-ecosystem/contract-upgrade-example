@@ -26,7 +26,7 @@ mod tests {
             }
         }
 
-        /// Introduce a new contract to the test, that we try to open from the file ~/tests/wasm/$pack 
+        /// Introduce a new contract to the test, that we try to open from the file ~/tests/wasm/$pack
         pub fn deploy_contract(&mut self, pack: &str) {
             let base_code = Code::from(pack);
             let base_args = runtime_args! {};
@@ -55,11 +55,16 @@ mod tests {
 
     #[test]
     fn test_simple_upgrade() {
+        // Setup test context
         let mut upgrade_test = ContractUpgrader::setup();
+        // Introduce the original contract to the test system.
         upgrade_test.deploy_contract("installer.wasm");
+        // Check for version 1 of the contract in the system.
         upgrade_test.assert_msg("v1");
 
+        // Deploy upgrader that overwrites the original contract.
         upgrade_test.deploy_contract("upgrader.wasm");
+        // Check whether the contract has been changed to version 2.
         upgrade_test.assert_msg("v2");
     }
 }

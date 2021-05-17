@@ -15,8 +15,14 @@ test-simple-upgrade:
 test: build-contract test-simple-upgrade
 
 clippy:
-	cd simple_upgrade && cargo +nightly clippy --target wasm32-unknown-unknown
+	cd simple_upgrade && cargo +nightly clippy --all-targets --all -- -D warnings -A renamed_and_removed_lints
 	cd tests && cargo +nightly clippy
+
+check-lint: clippy
+	cd simple_upgrade && cargo fmt --all -- --check
+
+lint: clippy
+	cd simple_upgrade && cargo fmt --all
 
 format:
 	cd simple_upgrade && cargo fmt 

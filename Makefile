@@ -2,7 +2,7 @@ prepare:
 	rustup target add wasm32-unknown-unknown
 
 build-contract:
-	cd simple_upgrade && cargo +nightly build --release --target wasm32-unknown-unknown
+	cd simple_upgrade && cargo build --release --target wasm32-unknown-unknown
 
 test-simple-upgrade:
 	mkdir -p tests/wasm
@@ -10,13 +10,13 @@ test-simple-upgrade:
 	cp simple_upgrade/target/wasm32-unknown-unknown/release/upgrader.wasm tests/wasm/
 	cp simple_upgrade/target/wasm32-unknown-unknown/release/test.wasm tests/wasm/
 
-	cd tests && cargo +nightly test -- --nocapture
+	cd tests && cargo test -- --nocapture
 
 test: build-contract test-simple-upgrade
 
 clippy:
-	cd simple_upgrade && cargo +nightly clippy --all-targets --all -- -D warnings -A renamed_and_removed_lints
-	cd tests && cargo +nightly clippy
+	cd simple_upgrade && cargo clippy --all-targets --all -- -D warnings -A renamed_and_removed_lints
+	cd tests && cargo clippy
 
 check-lint: clippy
 	cd simple_upgrade && cargo fmt --all -- --check

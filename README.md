@@ -2,32 +2,35 @@
 
 ## Purpose
 
-This example demonstrates the easiest and simplest way to upgrade or overwrite a contract.
-However this method, as is, is not recommended because it is not secure.
-The originally deployed contract stores its access token into the account's storage.
-With this the contract can be overwritten without first passing said access token and
-checking for privileges. We recommend you do not store access tokens in places that can be accessed
-by others with ease, and that you write further access right checks. The framework does not allow you
-to retrieve access tokens from wasm execution context.
+This example demonstrates the easiest and simplest way to upgrade a contract.
+The ownership of the contract is granted to the contract deployer.
+With this, the contract can be overwritten. We recommend you do not store access
+tokens in places that can be accessed by others with ease, and that you write
+further access right checks.
 
 ## Scenario
 
 The way the testing of the contract upgrade play out is as follows.
 - Deployment of `messenger` contract into the contract tester context.
-This contract contains a `get_message` entrypoint that returns the text "v1".
-(`messenger` is found in `/simple_upgrade/src/installer.rs` compiled to `installer.wasm`)
+This contract contains a `get_message` entrypoint that returns the text "first".
+(`messenger` is found in `/messanger/src/messanger_v1_install.rs` compiled
+to `messanger_v1_install.wasm`)
 
-- Executing the `test` contract on the tester context with the argument called `expected` having value "v1".
-`test` calls `get_message` on the `messenger` contract, then asserts the return value to the `expected` argument. 
-(`test` found in `/simple_upgrade/src/test.rs` compiled to `test.wasm`)
+- Executing the `assert_message` contract on the tester context with the argument
+called `expected` having value "first". `assert_message` calls `get_message` on
+the `messenger` contract, then asserts the return value to the `expected` argument. 
+(`assert_message` found in `/messanger/src/assert_message.rs` compiled
+to `assert_message.wasm`)
 
-- Deployment of `upgrader` contract into the contract tester context.
-`upgrader` overwrites the `get_message` entrypoint to return "v2", and saves it under the hash
-of the original `messenger`contract. From this point forward if you call `get_message` on the `messenger` contract
-you should recieve "v2" as the result.
-(`upgrader` is found in `/simple_upgrade/src/upgrader.rs` compiled to `upgrader.wasm`)
+- Upgrade of `messanger` contract into the next version.
+`messanger_v2_upgrade` overwrites the `get_message` entrypoint to return "second".
+From this point forward if you call `get_message` on the `messenger` contract
+you should recieve "second" as the result.
+(`messanger_v2_upgrade` is found in `/simple_upgrade/src/messanger_v2_upgrade.rs`
+compiled to `messanger_v2_upgrade.wasm`)
 
-- Call `test` again with "v2" as the `expected` argument to check if the upgrade went as expected.
+- Call `assert_message` again with "second" as the `expected` argument to check
+if the upgrade went as expected.
 
 ## Make commands
 ### prepare
@@ -55,9 +58,6 @@ Artifact removal command. (`.wasm` files, `target` folders)
 This contract compiles and runs when using `rustc 1.53.0-nightly (42816d61e 2021-04-24)`
 
 ## Casper contract sdk version
-casper-types = "1.1.1"
-casper-contract = "1.1.1"
-casper-engine-test-support = "1.1.1"
-
-
-### Date 14 May 2021
+casper-types = "1.2.0"
+casper-contract = "1.2.0"
+casper-engine-test-support = "1.2.0"

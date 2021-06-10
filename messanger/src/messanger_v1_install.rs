@@ -9,16 +9,16 @@ use casper_types::{
     CLType, CLValue,
 };
 
-/// Original getter function that returns to the caller that this contract is "v1"
+/// Original getter function that returns to the caller that this contract is "first"
 #[no_mangle]
 pub extern "C" fn get_message() {
-    runtime::ret(CLValue::from_t("v1".to_string()).unwrap_or_revert());
+    runtime::ret(CLValue::from_t(String::from("first")).unwrap_or_revert());
 }
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let mut entry_points = EntryPoints::new();
     // Introduce a singular, public "get_message" entry point.
+    let mut entry_points = EntryPoints::new();
     entry_points.add_entry_point(EntryPoint::new(
         "get_message",
         vec![],
@@ -28,11 +28,11 @@ pub extern "C" fn call() {
     ));
 
     // Introduce the contract itself to the account, and save it's package hash and access token
-    // to the account's storage as "messenger_package_hash" and "access_token" respectively.
+    // to the account's storage as "messenger_package_hash" and "messanger_access_token" respectively.
     let _ = storage::new_contract(
         entry_points,
         None,
         Some("messenger_package_hash".to_string()),
-        Some("access_token".to_string()),
+        Some("messanger_access_token".to_string()),
     );
 }

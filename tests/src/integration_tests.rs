@@ -15,7 +15,7 @@ mod tests {
     impl ContractUpgrader {
         /// Test context constructor
         pub fn setup() -> Self {
-            let public_key: PublicKey = SecretKey::ed25519([1u8; 32]).into();
+            let public_key: PublicKey = SecretKey::ed25519_from_bytes([1u8; 32]).unwrap().into();
             let account_addr = AccountHash::from(&public_key);
             let context = TestContextBuilder::new()
                 .with_public_key(public_key, U512::from("128000000000"))
@@ -40,7 +40,7 @@ mod tests {
 
         /// Execute the code of ~/tests/wasm/test.wasm with the argument named "expected"
         pub fn assert_msg(&mut self, msg: &str) {
-            let base_code = Code::from("test.wasm");
+            let base_code = Code::from("assert_message.wasm");
             let base_args = runtime_args! {
                 "expected" => msg
             };
@@ -58,14 +58,14 @@ mod tests {
         // Setup test context
         let mut upgrade_test = ContractUpgrader::setup();
         // Introduce the original contract to the test system.
-        upgrade_test.deploy_contract("installer.wasm");
+        upgrade_test.deploy_contract("messanger_v1_install.wasm");
         // Check for version 1 of the contract in the system.
-        upgrade_test.assert_msg("v1");
+        upgrade_test.assert_msg("first");
 
         // Deploy upgrader that overwrites the original contract.
-        upgrade_test.deploy_contract("upgrader.wasm");
+        upgrade_test.deploy_contract("messanger_v2_upgrade.wasm");
         // Check whether the contract has been changed to version 2.
-        upgrade_test.assert_msg("v2");
+        upgrade_test.assert_msg("second");
     }
 }
 

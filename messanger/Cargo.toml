@@ -1,0 +1,32 @@
+[package]
+name = "messanger"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+casper-contract = "1.2.0"
+casper-types = "1.2.0"
+
+[[bin]]
+name = "messanger_v1_install"
+path = "src/messanger_v1_install.rs"
+bench = false
+doctest = false
+test = false
+
+[[bin]]
+name = "messanger_v2_upgrade"
+path = "src/messanger_v2_upgrade.rs"
+bench = false
+doctest = false
+test = false
+
+[[bin]]
+name = "assert_message"
+path = "src/assert_message.rs"
+bench = false
+doctest = false
+test = false
+
+[features]
+default = ["casper-contract/std", "casper-types/std", "casper-contract/test-support"]

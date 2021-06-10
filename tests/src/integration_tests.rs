@@ -1,109 +1,72 @@
 #[cfg(test)]
 mod tests {
-    use casperlabs_engine_test_support::{Code, Error, SessionBuilder, TestContextBuilder, Value, TestContext, Hash};
-    use casperlabs_types::{account::AccountHash, U512, RuntimeArgs, runtime_args, CLTyped, contracts::{ContractVersion, EntryPoints, NamedKeys, Contract}, bytesrepr::FromBytes};
+    pub use casper_engine_test_support::{Code, SessionBuilder, TestContext, TestContextBuilder};
+    pub use casper_types::{
+        account::AccountHash, bytesrepr::FromBytes, runtime_args, CLTyped, ContractHash, PublicKey,
+        RuntimeArgs, SecretKey, U512,
+    };
 
-    const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
-
-    const METHOD_DEPOSIT: &str = "deposit";
-    const METHOD_UPGRADE: &str = "upgrade";
-
-    const INCOMMING_PURSE: &str = "incomming_purse";
-    const ACCESS_TOKEN: &str = "access_token";
-    const CONTRACT_NAME: &str = "deposit_box";
-    const CONTRACT_HASH: &str = "deposit_box_hash";
-    const CONTRACT_VERSION: &str = "contract_version";
-    const TEXT_KEY: &str = "text";
-    const TEXT_VALUE_V1: &str = "value_one";
-    const TEXT_VALUE_V2: &str = "value_two";
-
-    #[test]
-    fn should_store_hello_world() {
-        let mut context = TestContextBuilder::new()
-            .with_account(MY_ACCOUNT, U512::from(128_000_000))
-            .build();
-
-        let session_code = Code::from("contract.wasm");
-        let session_args = runtime_args! {};
-        let session = SessionBuilder::new(session_code, session_args)
-            .with_address(MY_ACCOUNT)
-            .with_authorization_keys(&[MY_ACCOUNT])
-            .build();
-        
-        context.run(session);
-        assert_eq!(get_contract_version_v1(&context), 1);
-
-        call_deposit_v1(&mut context);
-        assert_eq!(get_text(&context), TEXT_VALUE_V1);
-
-        call_upgrade_v1(&mut context);
-
-        // assert_eq!(get_contract_version_v2(&context), 2);
+    /// Struct to hold test relevant data, such as context and account_hash
+    pub struct ContractUpgrader {
+        context: TestContext,
+        account_addr: AccountHash,
     }
 
-    fn call_deposit_v1(context: &mut TestContext) {
-        let contract_hash = get_contract_hash(&context);
-        let code = Code::Hash(contract_hash, METHOD_DEPOSIT.to_string());
-        let args = runtime_args!{};
-        let session = SessionBuilder::new(code, args)
-            .with_address(MY_ACCOUNT)
-            .with_authorization_keys(&[MY_ACCOUNT])
-            .build();
-        context.run(session);
-    }
-
-    fn call_upgrade_v1(context: &mut TestContext) {
-        let contract_hash = get_contract_hash(&context);
-        let code = Code::Hash(contract_hash, METHOD_UPGRADE.to_string());
-        let args = runtime_args!{};
-        let session = SessionBuilder::new(code, args)
-            .with_address(MY_ACCOUNT)
-            .with_authorization_keys(&[MY_ACCOUNT])
-            .build();
-        context.run(session);
-    }
-
-    fn get_contract_version_v1(context: &TestContext) -> u32 {
-        query_account(context, CONTRACT_VERSION).unwrap()
-    }
-
-    fn get_contract_version_v2(context: &TestContext) -> u32 {
-        query_contract(context, CONTRACT_VERSION).unwrap()
-    }
-
-    fn get_contract_hash(context: &TestContext) -> Hash {
-        query_account(context, CONTRACT_HASH).unwrap()
-    }
-
-    fn get_text(context: &TestContext) -> String {
-        query_contract(context, TEXT_KEY).unwrap()
-    }
-
-    fn query_account<T: CLTyped + FromBytes>(context: &TestContext, key: &str) -> Option<T> {
-        query(context, &[key])
-    }
-
-    fn query_contract<T: CLTyped + FromBytes>(context: &TestContext, key: &str) -> Option<T> {
-        query(context, &[CONTRACT_NAME, key])
-    }
-
-    fn query<T: CLTyped + FromBytes>(context: &TestContext, path: &[&str]) -> Option<T> {
-        match context
-            .query(MY_ACCOUNT, path)
-        {
-            Err(err) => {
-                println!("{:?}", err);
-                None
-            },
-            Ok(maybe_value) => {
-                let value = maybe_value
-                    .into_t()
-                    .unwrap_or_else(|_| panic!("{} is not expected type.", path[0]));
-                Some(value)
+    impl ContractUpgrader {
+        /// Test context constructor
+        pub fn setup() -> Self {
+            let public_key: PublicKey = SecretKey::ed25519_from_bytes([1u8; 32]).unwrap().into();
+            let account_addr = AccountHash::from(&public_key);
+            let context = TestContextBuilder::new()
+                .with_public_key(public_key, U512::from("128000000000"))
+                .build();
+            Self {
+                context,
+                account_addr,
             }
+        }
+
+        /// Introduce a new contract to the test, that we try to open from the file ~/tests/wasm/$pack
+        pub fn deploy_contract(&mut self, pack: &str) {
+            let base_code = Code::from(pack);
+            let base_args = runtime_args! {};
+            let base_session = SessionBuilder::new(base_code, base_args)
+                .with_address(self.account_addr)
+                .with_authorization_keys(&[self.account_addr])
+                .build();
+            self.context.run(base_session);
+            println!("deployed {}", pack);
+        }
+
+        /// Execute the code of ~/tests/wasm/test.wasm with the argument named "expected"
+        pub fn assert_msg(&mut self, msg: &str) {
+            let base_code = Code::from("assert_message.wasm");
+            let base_args = runtime_args! {
+                "expected" => msg
+            };
+            let base_session = SessionBuilder::new(base_code, base_args)
+                .with_address(self.account_addr)
+                .with_authorization_keys(&[self.account_addr])
+                .build();
+            self.context.run(base_session);
+            println!("asserted {}", msg);
         }
     }
 
+    #[test]
+    fn test_simple_upgrade() {
+        // Setup test context
+        let mut upgrade_test = ContractUpgrader::setup();
+        // Introduce the original contract to the test system.
+        upgrade_test.deploy_contract("messanger_v1_install.wasm");
+        // Check for version 1 of the contract in the system.
+        upgrade_test.assert_msg("first");
+
+        // Deploy upgrader that overwrites the original contract.
+        upgrade_test.deploy_contract("messanger_v2_upgrade.wasm");
+        // Check whether the contract has been changed to version 2.
+        upgrade_test.assert_msg("second");
+    }
 }
 
 fn main() {

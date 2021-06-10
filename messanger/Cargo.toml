@@ -30,6 +30,3 @@ test = false
 
 [features]
 default = ["casper-contract/std", "casper-types/std", "casper-contract/test-support"]
-
-[profile.release]
-lto = true

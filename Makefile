@@ -2,30 +2,29 @@ prepare:
 	rustup target add wasm32-unknown-unknown
 
 build-contract:
-	cd messanger && cargo build --release --target wasm32-unknown-unknown
+	cargo build -p messanger --release --target wasm32-unknown-unknown
 
 test-simple-upgrade:
 	mkdir -p tests/wasm
-	cp messanger/target/wasm32-unknown-unknown/release/*.wasm tests/wasm/
-	cd tests && cargo test -- --nocapture
+	cp target/wasm32-unknown-unknown/release/*.wasm tests/wasm/
+	cargo test -p tests -- --nocapture
 
 test: build-contract test-simple-upgrade
 
 clippy:
-	cd messanger && cargo clippy --all-targets --all -- -D warnings -A renamed_and_removed_lints
-	cd tests && cargo clippy
+	cargo clippy -p messanger --all-targets --all -- -D warnings -A renamed_and_removed_lints
+	cargo clippy -p tests
 
 check-lint: clippy
-	cd messanger && cargo fmt --all -- --check
+	cargo fmt --all -- --check
 
 lint: clippy
-	cd messanger && cargo fmt --all
+	cargo fmt --all
 
 format:
-	cd messanger && cargo fmt 
-	cd tests && cargo fmt
+	cargo fmt 
 
 clean:
-	cd messanger && cargo clean
-	cd tests && cargo clean
+	cargo clean
+	cargo clean
 	rm tests/wasm/*.wasm

@@ -1,8 +1,12 @@
 prepare:
+	rustup default nightly-2021-09-17-x86_64-unknown-linux-gnu
 	rustup target add wasm32-unknown-unknown
 
 build-contract:
 	cargo build -p messanger --release --target wasm32-unknown-unknown
+	wasm-strip target/wasm32-unknown-unknown/release/messanger_v1_install.wasm
+	wasm-strip target/wasm32-unknown-unknown/release/messanger_v2_upgrade.wasm
+	
 
 test-simple-upgrade:
 	mkdir -p tests/wasm

@@ -9,11 +9,11 @@ use casper_types::{
     CLType, CLValue,
 };
 
-/// Original getter function that returns to the caller that this contract is "first"
+/// This `get_message` function will never be updated, and as such will always return "locked"
 #[no_mangle]
 pub extern "C" fn get_message() {
-    runtime::put_key("message", storage::new_uref("first").into());
-    runtime::ret(CLValue::from_t(String::from("first")).unwrap_or_revert());
+    runtime::put_key("message", storage::new_uref("locked").into());
+    runtime::ret(CLValue::from_t(String::from("locked")).unwrap_or_revert());
 }
 
 #[no_mangle]
@@ -28,15 +28,15 @@ pub extern "C" fn call() {
         EntryPointType::Contract,
     ));
 
+    // Write a new key that states that this is the locked version
     let mut named_keys = NamedKeys::new();
     named_keys.insert(
         "version".to_string(),
-        storage::new_uref("version_original").into(),
+        storage::new_uref("locked_version").into(),
     );
 
-    // Introduce the contract itself to the account, and save it's package hash and access token
-    // to the account's storage as "messenger_package_hash" and "messanger_access_token" respectively.
-    let (hash, _) = storage::new_contract(
+    // Creating a contract with `new_locked_contract` permanently denies the possibility of upgrading a contract.
+    let (hash, _) = storage::new_locked_contract(
         entry_points,
         Some(named_keys),
         Some("messenger_package_hash".to_string()),

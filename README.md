@@ -32,6 +32,19 @@ compiled to `messanger_v2_upgrade.wasm`)
 - Call `assert_message` again with "second" as the `expected` argument to check
 if the upgrade went as expected.
 
+### Named Keys
+
+When upgrading a contract you cannot overwrite existing named keys, but you can create new ones.
+This does not mean that you cannot overwrite the named keys at all, you simply cannot do it
+by passing them to the `add_contract_version` function as parameter, and even if you do it
+it will not take any effect.
+
+### Locked Contracts
+
+There is also a demonstration of the contract locking feature.
+Locking a contract is permanent, and as such you will never be able to upgrade it.
+This contract can be found at `/simple_upgrade/src/messanger_locked_install.rs`
+
 ## Make commands
 ### prepare
 Adds wasm to the cargo compilation targets.
@@ -55,9 +68,10 @@ Applies formatting to the codes.
 Artifact removal command. (`.wasm` files, `target` folders)
 
 ## Rust version
-This contract compiles and runs when using `rustc 1.53.0-nightly (42816d61e 2021-04-24)`
+This contract compiles and runs when using `rustc 1.57.0-nightly (e4828d5b7 2021-09-16)`
 
 ## Casper contract sdk version
-casper-types = "1.2.0"
-casper-contract = "1.2.0"
-casper-engine-test-support = "1.2.0"
+casper-types = "1.4.1"
+casper-contract = "1.4.1"
+casper-engine-test-support = "1.4.1"
+

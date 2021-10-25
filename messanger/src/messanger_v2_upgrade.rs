@@ -5,7 +5,7 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
-    contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints},
+    contracts::{EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, NamedKeys},
     CLType, CLValue, ContractPackageHash,
 };
 
@@ -13,6 +13,7 @@ use casper_types::{
 /// that the contract has gained and upgraded version.
 #[no_mangle]
 pub extern "C" fn get_message() {
+    runtime::put_key("message", storage::new_uref("second").into());
     runtime::ret(CLValue::from_t("second".to_string()).unwrap_or_revert());
 }
 
@@ -35,7 +36,20 @@ pub extern "C" fn call() {
         .unwrap()
         .into();
 
+    let mut named_keys = NamedKeys::new();
+    // When upgrading a contract, the system will not overwrite already existing keys,
+    named_keys.insert(
+        "version".to_string(),
+        storage::new_uref("version_updated").into(),
+    );
+    // but you can create new keys.
+    named_keys.insert(
+        "version2".to_string(),
+        storage::new_uref("version_updated").into(),
+    );
+
     // Overwrite the original contract with the new entry points. This works
     // because the original code stored the required access token into the accounts storage.
-    let _ = storage::add_contract_version(messanger_package_hash, entry_points, Default::default());
+    let (hash, _) = storage::add_contract_version(messanger_package_hash, entry_points, named_keys);
+    runtime::put_key("hash", hash.into());
 }

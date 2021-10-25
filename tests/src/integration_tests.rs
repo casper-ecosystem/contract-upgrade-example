@@ -52,6 +52,21 @@ mod tests {
             self.context.run(base_session);
             println!("asserted {}", msg);
         }
+
+        fn query_contract<T: CLTyped + FromBytes>(&self, name: &str) -> Option<T> {
+            match self
+                .context
+                .query(self.account_addr, &["hash".to_string(), name.to_string()])
+            {
+                Err(_) => None,
+                Ok(maybe_value) => {
+                    let value = maybe_value
+                        .into_t()
+                        .unwrap_or_else(|_| panic!("{} is not expected type.", name));
+                    Some(value)
+                }
+            }
+        }
     }
 
     #[test]
@@ -63,10 +78,68 @@ mod tests {
         // Check for version 1 of the contract in the system.
         upgrade_test.assert_msg("first");
 
+        // When we called the `get_message` we also stored the message "first" to the key "message".
+        assert_eq!(
+            "first",
+            upgrade_test.query_contract::<String>("message").unwrap()
+        );
+
+        // When we deployed the contract we stored "version_original" string to the "version" key.
+        assert_eq!(
+            "version_original",
+            upgrade_test.query_contract::<String>("version").unwrap()
+        );
+
         // Deploy upgrader that overwrites the original contract.
         upgrade_test.deploy_contract("messanger_v2_upgrade.wasm");
         // Check whether the contract has been changed to version 2.
         upgrade_test.assert_msg("second");
+
+        // The upgraded contract overwrites the "message" keys value to "second".
+        assert_eq!(
+            "second",
+            upgrade_test.query_contract::<String>("message").unwrap()
+        );
+
+        // During upgrade we supplied the "version" key with a new "version_updated" value,
+        // but this does not take effect as the key already existed,
+        // and so the value remained "version_original".
+        assert_eq!(
+            "version_original",
+            upgrade_test.query_contract::<String>("version").unwrap()
+        );
+
+        // On the otherhand we created a new key "version2" and this was indeed stored.
+        assert_eq!(
+            "version_updated",
+            upgrade_test.query_contract::<String>("version2").unwrap()
+        );
+    }
+
+    #[test]
+    #[should_panic = "LockedContract"]
+    fn test_locked_upgrade() {
+        // Setup test context
+        let mut upgrade_test = ContractUpgrader::setup();
+        // Introduce the locked contract to the test system.
+        upgrade_test.deploy_contract("messanger_locked_install.wasm");
+        // See if we succesfully deployed the locked contract.
+        upgrade_test.assert_msg("locked");
+
+        // When we called the `get_message` we also stored the message "locked" to the key "message".
+        assert_eq!(
+            "locked",
+            upgrade_test.query_contract::<String>("message").unwrap()
+        );
+
+        // When we deployed the contract we stored "locked_version" string to the "version" key.
+        assert_eq!(
+            "locked_version",
+            upgrade_test.query_contract::<String>("version").unwrap()
+        );
+
+        // Here we try to upgrade the locked contract, this will inherently fail.
+        upgrade_test.deploy_contract("messanger_v2_upgrade.wasm");
     }
 }
 

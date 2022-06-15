@@ -60,12 +60,12 @@ mod tests {
         }
 
         /// Function that handles the creation and execution of deploys.
-        fn call(&mut self, caller: AccountHash, entry_point: &str, args: RuntimeArgs) {
+        fn call(&mut self, caller: AccountHash, contract_name: &str, entry_point: &str, args: RuntimeArgs) {
             deploy(
                 &mut self.builder,
                 &caller,
                 &DeploySource::ByContractName {
-                    name: "post_board_contract_hash_1".to_string(),
+                    name: contract_name.to_string(),
                     entry_point: entry_point.to_string(),
                 },
                 args,
@@ -99,6 +99,7 @@ mod tests {
         let mut context = Contract::deploy();
         context.call(
             context.alice_account,
+            "post_board_contract_hash_1",
             "post",
             runtime_args! {"post" => "post"},
         );
@@ -125,6 +126,21 @@ mod tests {
 
         context.call(
             context.alice_account,
+            "post_board_contract_hash_1",
+            "post",
+            runtime_args! {"post" => "post"},
+        );
+
+        let post: String = query(
+            &context.builder,
+            Key::Account(context.alice_account),
+            &["post_board_contract_hash_1".to_string(), "post".to_string()],
+        );
+        assert_eq!(post, "post");
+
+        context.call(
+            context.alice_account,
+            "post_board_contract_hash_2",
             "post",
             runtime_args! {"date"=>"today", "post" => "post"},
         );

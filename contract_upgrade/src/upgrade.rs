@@ -67,17 +67,17 @@ pub extern "C" fn call() {
     let mut named_keys = NamedKeys::default();
     named_keys.insert(AUTH.to_string(), get_caller().into());
     named_keys.insert(POSTS.to_string(), posts_dict.into());
-    let (contract_hash, version) =
+    let (contract_hash, _version) =
         storage::add_contract_version(post_board_package_hash, entry_points, named_keys);
 
     runtime::put_key(
-        &format!("{}{}", POST_BOARD_CONTRACT_HASH_, version),
+        "post_board_contract_hash_2",
         contract_hash.into(),
     );
 
     disable_contract_version(
         post_board_package_hash,
-        runtime::get_key(&format!("{}{}", POST_BOARD_CONTRACT_HASH_, version - 1))
+        runtime::get_key("post_board_contract_hash_1")
             .unwrap_or_revert()
             .into_hash()
             .unwrap_or_revert()

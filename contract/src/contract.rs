@@ -10,7 +10,6 @@ use casper_types::{
 };
 
 pub const POST: &str = "post";
-pub const POST_BOARD_CONTRACT_HASH_: &str = "post_board_contract_hash_";
 
 // EntryPoint to make a post. Stores the post argument under the name `post`.
 #[no_mangle]
@@ -32,7 +31,7 @@ pub extern "C" fn call() {
 
     // Create the new contract and store its package hash and access token. This is an important step,
     // as only the context holding the access token can make changes to the contract package (add/disable contract version).
-    let (contract_hash, version) = storage::new_contract(
+    let (contract_hash, _version) = storage::new_contract(
         entry_points,
         None,
         Some("post_board_package_hash".to_string()),
@@ -40,7 +39,7 @@ pub extern "C" fn call() {
     );
     // Store the hash of this initial contract version.
     runtime::put_key(
-        &format!("{}{}", POST_BOARD_CONTRACT_HASH_, version),
+        "post_board_contract_hash_1",
         contract_hash.into(),
     );
 }

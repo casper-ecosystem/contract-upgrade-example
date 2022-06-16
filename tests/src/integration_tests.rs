@@ -26,13 +26,16 @@ mod tests {
                 PublicKey::from(&SecretKey::ed25519_from_bytes([1u8; 32]).unwrap());
             let bob_public_key: PublicKey =
                 PublicKey::from(&SecretKey::ed25519_from_bytes([2u8; 32]).unwrap());
+
             // Get addresses for participating accounts.
             let alice_account = AccountHash::from(&alice_public_key);
             let bob_account = AccountHash::from(&bob_public_key);
 
-            // Set up the test framework and fund accounts
+            // Set up the test framework
             let mut builder = InMemoryWasmTestBuilder::default();
             builder.run_genesis(&DEFAULT_RUN_GENESIS_REQUEST).commit();
+
+            // fund accounts
             builder
                 .exec(fund_account(&alice_account))
                 .expect_success()
@@ -60,7 +63,13 @@ mod tests {
         }
 
         /// Function that handles the creation and execution of deploys.
-        fn call(&mut self, caller: AccountHash, contract_name: &str, entry_point: &str, args: RuntimeArgs) {
+        fn call(
+            &mut self,
+            caller: AccountHash,
+            contract_name: &str,
+            entry_point: &str,
+            args: RuntimeArgs,
+        ) {
             deploy(
                 &mut self.builder,
                 &caller,
@@ -73,6 +82,7 @@ mod tests {
             );
         }
 
+        // Query a dictionary for a value
         pub fn query_dictionary_value<T: CLTyped + FromBytes>(
             &self,
             base: Key,
@@ -95,26 +105,25 @@ mod tests {
     }
 
     #[test]
-    fn test_base() {
+    fn test_upgrade() {
         let mut context = Contract::deploy();
+        // Make a post
         context.call(
             context.alice_account,
             "post_board_contract_hash_1",
             "post",
             runtime_args! {"post" => "post"},
         );
+        // Query the contract for the post
         let post: String = query(
             &context.builder,
             Key::Account(context.alice_account),
             &["post_board_contract_hash_1".to_string(), "post".to_string()],
         );
+
         assert_eq!(post, "post");
-    }
 
-    #[test]
-    fn test_upgrade() {
-        let mut context = Contract::deploy();
-
+        // Upgrade the contract
         let code = PathBuf::from("upgrade.wasm");
         deploy(
             &mut context.builder,
@@ -124,36 +133,25 @@ mod tests {
             None,
         );
 
-        context.call(
-            context.alice_account,
-            "post_board_contract_hash_1",
-            "post",
-            runtime_args! {"post" => "post"},
-        );
-
-        let post: String = query(
-            &context.builder,
-            Key::Account(context.alice_account),
-            &["post_board_contract_hash_1".to_string(), "post".to_string()],
-        );
-        assert_eq!(post, "post");
-
+        // Call the upgraded post entrypoint
         context.call(
             context.alice_account,
             "post_board_contract_hash_2",
             "post",
-            runtime_args! {"date"=>"today", "post" => "post"},
+            runtime_args! {"date"=>"today", "post" => "upgraded_post"},
         );
 
+        // After the upgrade the contract stores data in a dictionary instead.
         let dict_uref: URef = query(
             &context.builder,
             Key::Account(context.alice_account),
             &["posts_uref_key".to_string()],
         );
 
+        // Query the dictionary for the post
         let post = context.query_dictionary_value::<String>(Key::URef(dict_uref), "posts", "today");
 
-        assert_eq!(post, "post");
+        assert_eq!(post, "upgraded_post");
     }
 }
 

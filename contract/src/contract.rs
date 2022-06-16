@@ -38,8 +38,5 @@ pub extern "C" fn call() {
         Some("post_board_access_token".to_string()),
     );
     // Store the hash of this initial contract version.
-    runtime::put_key(
-        "post_board_contract_hash_1",
-        contract_hash.into(),
-    );
+    runtime::put_key("post_board_contract_hash_1", contract_hash.into());
 }

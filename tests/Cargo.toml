@@ -1,15 +1,16 @@
 [package]
 name = "tests"
 version = "0.1.0"
-authors = ["Maciej Zielinski <maciek.s.zielinski@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 
 [dev-dependencies]
-casper-types = "1.3.2"
-casper-contract = "1.3.2"
-casper-engine-test-support = "1.3.2"
+casper-types = "1.5.0"
+casper-contract = "1.4.4"
+casper-engine-test-support = "2.2.0"
+casper-execution-engine = "2.0.0"
+rand = "0.8.5"
 
 [[bin]]
 name = "integration-tests"

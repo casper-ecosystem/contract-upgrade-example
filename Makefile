@@ -2,7 +2,7 @@ prepare:
 	rustup target add wasm32-unknown-unknown
 
 build-contract:
-	cargo build -p messanger --release --target wasm32-unknown-unknown
+	cargo build -p contract -p contract_upgrade --release --target wasm32-unknown-unknown
 
 test-simple-upgrade:
 	mkdir -p tests/wasm
@@ -12,7 +12,7 @@ test-simple-upgrade:
 test: build-contract test-simple-upgrade
 
 clippy:
-	cargo clippy -p messanger --all-targets --all -- -D warnings -A renamed_and_removed_lints
+	cargo clippy -p contract -p contract_upgrade --all-targets --all -- -D warnings -A renamed_and_removed_lints
 	cargo clippy -p tests
 
 check-lint: clippy

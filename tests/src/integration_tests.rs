@@ -1,72 +1,157 @@
 #[cfg(test)]
+mod utils;
+
+#[cfg(test)]
 mod tests {
-    pub use casper_engine_test_support::{Code, SessionBuilder, TestContext, TestContextBuilder};
-    pub use casper_types::{
-        account::AccountHash, bytesrepr::FromBytes, runtime_args, CLTyped, ContractHash, PublicKey,
-        RuntimeArgs, SecretKey, U512,
+    use std::path::PathBuf;
+
+    use casper_engine_test_support::{InMemoryWasmTestBuilder, DEFAULT_RUN_GENESIS_REQUEST};
+    use casper_types::bytesrepr::FromBytes;
+
+    use crate::utils::{deploy, fund_account, query, DeploySource};
+    use casper_types::{
+        account::AccountHash, runtime_args, CLTyped, Key, PublicKey, RuntimeArgs, SecretKey, URef,
     };
 
-    /// Struct to hold test relevant data, such as context and account_hash
-    pub struct ContractUpgrader {
-        context: TestContext,
-        account_addr: AccountHash,
+    pub struct Contract {
+        pub builder: InMemoryWasmTestBuilder,
+        pub alice_account: AccountHash,
+        pub bob_account: AccountHash,
     }
 
-    impl ContractUpgrader {
-        /// Test context constructor
-        pub fn setup() -> Self {
-            let secret_key = SecretKey::ed25519_from_bytes([1u8; 32]).unwrap();
-            let public_key = PublicKey::from(&secret_key);
-            let account_addr = AccountHash::from(&public_key);
-            let context = TestContextBuilder::new()
-                .with_public_key(public_key, U512::from("128000000000"))
-                .build();
+    impl Contract {
+        pub fn deploy() -> Self {
+            // We create 2 accounts. "alice" will be the one who installs the contract.
+            let alice_public_key: PublicKey =
+                PublicKey::from(&SecretKey::ed25519_from_bytes([1u8; 32]).unwrap());
+            let bob_public_key: PublicKey =
+                PublicKey::from(&SecretKey::ed25519_from_bytes([2u8; 32]).unwrap());
+
+            // Get addresses for participating accounts.
+            let alice_account = AccountHash::from(&alice_public_key);
+            let bob_account = AccountHash::from(&bob_public_key);
+
+            // Set up the test framework
+            let mut builder = InMemoryWasmTestBuilder::default();
+            builder.run_genesis(&DEFAULT_RUN_GENESIS_REQUEST).commit();
+
+            // fund accounts
+            builder
+                .exec(fund_account(&alice_account))
+                .expect_success()
+                .commit();
+            builder
+                .exec(fund_account(&bob_account))
+                .expect_success()
+                .commit();
+
+            // install contract
+            let code = PathBuf::from("contract.wasm");
+            deploy(
+                &mut builder,
+                &alice_account,
+                &DeploySource::Code(code),
+                runtime_args! {},
+                None,
+            );
+
             Self {
-                context,
-                account_addr,
+                builder,
+                alice_account,
+                bob_account,
             }
         }
 
-        /// Introduce a new contract to the test, that we try to open from the file ~/tests/wasm/$pack
-        pub fn deploy_contract(&mut self, pack: &str) {
-            let base_code = Code::from(pack);
-            let base_args = runtime_args! {};
-            let base_session = SessionBuilder::new(base_code, base_args)
-                .with_address(self.account_addr)
-                .with_authorization_keys(&[self.account_addr])
-                .build();
-            self.context.run(base_session);
-            println!("deployed {}", pack);
+        /// Function that handles the creation and execution of deploys.
+        fn call(
+            &mut self,
+            caller: AccountHash,
+            contract_name: &str,
+            entry_point: &str,
+            args: RuntimeArgs,
+        ) {
+            deploy(
+                &mut self.builder,
+                &caller,
+                &DeploySource::ByContractName {
+                    name: contract_name.to_string(),
+                    entry_point: entry_point.to_string(),
+                },
+                args,
+                None,
+            );
         }
 
-        /// Execute the code of ~/tests/wasm/test.wasm with the argument named "expected"
-        pub fn assert_msg(&mut self, msg: &str) {
-            let base_code = Code::from("assert_message.wasm");
-            let base_args = runtime_args! {
-                "expected" => msg
-            };
-            let base_session = SessionBuilder::new(base_code, base_args)
-                .with_address(self.account_addr)
-                .with_authorization_keys(&[self.account_addr])
-                .build();
-            self.context.run(base_session);
-            println!("asserted {}", msg);
+        // Query a dictionary for a value
+        pub fn query_dictionary_value<T: CLTyped + FromBytes>(
+            &self,
+            base: Key,
+            dict_name: &str,
+            key: &str,
+        ) -> T {
+            crate::utils::query_dictionary_item(
+                &self.builder,
+                base,
+                Some(dict_name.to_string()),
+                key,
+            )
+            .expect("should be stored value.")
+            .as_cl_value()
+            .expect("should be cl value.")
+            .clone()
+            .into_t()
+            .expect("Wrong type in query result.")
         }
     }
 
     #[test]
-    fn test_simple_upgrade() {
-        // Setup test context
-        let mut upgrade_test = ContractUpgrader::setup();
-        // Introduce the original contract to the test system.
-        upgrade_test.deploy_contract("messanger_v1_install.wasm");
-        // Check for version 1 of the contract in the system.
-        upgrade_test.assert_msg("first");
+    fn test_upgrade() {
+        let mut context = Contract::deploy();
+        // Make a post
+        context.call(
+            context.alice_account,
+            "post_board_contract_hash_1",
+            "post",
+            runtime_args! {"post" => "post"},
+        );
+        // Query the contract for the post
+        let post: String = query(
+            &context.builder,
+            Key::Account(context.alice_account),
+            &["post_board_contract_hash_1".to_string(), "post".to_string()],
+        );
 
-        // Deploy upgrader that overwrites the original contract.
-        upgrade_test.deploy_contract("messanger_v2_upgrade.wasm");
-        // Check whether the contract has been changed to version 2.
-        upgrade_test.assert_msg("second");
+        assert_eq!(post, "post");
+
+        // Upgrade the contract
+        let code = PathBuf::from("upgrade.wasm");
+        deploy(
+            &mut context.builder,
+            &context.alice_account,
+            &DeploySource::Code(code),
+            runtime_args! {},
+            None,
+        );
+
+        // Call the upgraded post entrypoint
+        context.call(
+            context.alice_account,
+            "post_board_contract_hash_2",
+            "post",
+            runtime_args! {"date"=>"today", "post" => "upgraded_post"},
+        );
+
+        // After the upgrade the contract stores data in a dictionary instead.
+        let dict_uref: URef = query(
+            &context.builder,
+            Key::Account(context.alice_account),
+            &["posts_uref_key".to_string()],
+        );
+
+        // Query the dictionary for the post
+        let post = context.query_dictionary_value::<String>(Key::URef(dict_uref), "posts", "today");
+
+        assert_eq!(post, "upgraded_post");
     }
 }
 
